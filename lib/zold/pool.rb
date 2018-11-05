@@ -32,7 +32,7 @@ require_relative 'stats'
 # Author:: Yegor Bugayenko (yegor256@gmail.com)
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
-module Zold::Stress
+module Zold
   # Pool of wallets.
   class Pool
     def initialize(id:, pub:, wallets:, remotes:, copies:, stats:, log: Zold::Log::Quiet.new)

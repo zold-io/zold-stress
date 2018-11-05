@@ -19,15 +19,15 @@
 # SOFTWARE.
 
 require 'backtrace'
-# require 'parallelize'
+require 'parallelize'
 require 'zold/key'
 require 'zold/id'
 require 'zold/commands/push'
 require 'zold/commands/remote'
-require_relative 'stats'
-require_relative 'pool'
-require_relative 'pmnts'
-require_relative 'air'
+require_relative 'stress/stats'
+require_relative 'stress/pool'
+require_relative 'stress/pmnts'
+require_relative 'stress/air'
 
 # Stress test.
 # Author:: Yegor Bugayenko (yegor256@gmail.com)

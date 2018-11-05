@@ -20,12 +20,12 @@
 
 require 'minitest/autorun'
 require 'zold/log'
-require 'simplecov'
 
 STDOUT.sync = true
 
 ENV['RACK_ENV'] = 'test'
 
+require 'simplecov'
 SimpleCov.start
 if ENV['CI'] == 'true'
   require 'codecov'

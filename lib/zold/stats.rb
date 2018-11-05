@@ -26,7 +26,7 @@ require 'zold/log'
 # Author:: Yegor Bugayenko (yegor256@gmail.com)
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
-module Zold::Stress
+module Zold
   class Stats
     def initialize(age: 24 * 60 * 60, log: Zold::Log::Quiet.new)
       @age = age

@@ -35,7 +35,7 @@ require 'zold/commands/node'
 require 'tmpdir'
 require_relative 'test__helper'
 require_relative 'fake_node'
-require_relative '../lib/zold/stress'
+require_relative '../../lib/zold/stress'
 
 class StressTest < Minitest::Test
   def test_runs_a_few_full_cycles

@@ -44,8 +44,10 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'zold', '~>0'
   s.add_development_dependency 'codecov', '~>0'
   s.add_development_dependency 'minitest', '~>5'
+  s.add_development_dependency 'random-port', '~>0'
   s.add_development_dependency 'rdoc', '~>4'
   s.add_development_dependency 'rspec-rails', '~>3'
   s.add_development_dependency 'rubocop', '0.58.1'
   s.add_development_dependency 'rubocop-rspec', '~>1'
+  s.add_development_dependency 'simplecov', '~>0'
 end

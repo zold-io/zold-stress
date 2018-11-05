@@ -12,44 +12,28 @@
 #
 # THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Payments still flying in air.
-# Author:: Yegor Bugayenko (yegor256@gmail.com)
-# Copyright:: Copyright (c) 2018 Yegor Bugayenko
-# License:: MIT
-module Zold::Stress
-  # Flying payments.
-  class Air
-    def initialize
-      @mutex = Mutex.new
-      @all = []
-    end
+require 'minitest/autorun'
+require 'zold/id'
+require 'parallelize'
+require_relative 'test__helper'
+require_relative '../../lib/zold/air'
 
-    def to_json
-      {
-        'total': @all.count
-      }
+class AirTest < Minitest::Test
+  def test_adds_and_removes
+    air = Zold::Stress::Air.new
+    pmt = { start: Time.now, source: Zold::Id::ROOT, target: Zold::Id::ROOT, details: 'Hi!' }
+    air.add(pmt)
+    assert_equal(1, air.fetch.count)
+    air.fetch.each do |p|
+      assert_equal(pmt, p)
     end
-
-    def fetch
-      @all
-    end
-
-    def add(pmt)
-      @mutex.synchronize do
-        @all << pmt
-      end
-    end
-
-    def delete(pmt)
-      @mutex.synchronize do
-        @all.delete(pmt)
-      end
-    end
+    air.delete(pmt)
+    assert_equal(0, air.fetch.count)
   end
 end

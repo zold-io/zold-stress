@@ -19,38 +19,27 @@
 # SOFTWARE.
 
 require 'minitest/autorun'
-require 'zold/key'
-require 'zold/id'
-require 'zold/log'
-require 'zold/wallets'
-require 'zold/sync_wallets'
-require 'zold/remotes'
-require 'tmpdir'
-require_relative '../test__helper'
-require_relative '../fake_node'
-require_relative '../../lib/zold/stress/pool'
-require_relative '../../lib/zold/stress/stats'
+require_relative 'test__helper'
+require_relative '../lib/zold/stats'
 
-class PoolTest < Minitest::Test
-  def test_reloads_wallets
-    FakeNode.new(test_log).exec do |port|
-      Dir.mktmpdir do |home|
-        wallets = Zold::SyncWallets.new(Zold::Wallets.new(home))
-        remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
-        remotes.clean
-        remotes.add('localhost', port)
-        size = 3
-        Zold::Stress::Pool.new(
-          id: Zold::Id.new('0123456701234567'),
-          pub: Zold::Key.new(file: 'test-assets/id_rsa.pub'),
-          wallets: wallets,
-          remotes: remotes,
-          copies: File.join(home, 'copies'),
-          stats: Zold::Stress::Stats.new(log: test_log),
-          log: test_log
-        ).rebuild(size, ['--ignore-score-weakness', '--network=test'])
-        assert_equal(size, wallets.all.count)
-      end
-    end
+class StatsTest < Minitest::Test
+  def test_aggregates_metrics
+    stats = Zold::Stress::Stats.new
+    m = 'metric-1'
+    stats.put(m, 0.1)
+    stats.put(m, 3.0)
+    assert(stats.to_json[m])
+    assert_equal(1.55, stats.to_json[m][:avg])
+  end
+
+  def test_filters_out_too_old_values
+    stats = Zold::Stress::Stats.new(age: 0.1)
+    m = 'metric-1'
+    stats.put(m, 1)
+    stats.put(m, 2)
+    assert_equal(2, stats.to_json[m][:total])
+    sleep 0.2
+    stats.put(m, 2)
+    assert_equal(1, stats.to_json[m][:total])
   end
 end

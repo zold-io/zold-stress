@@ -27,10 +27,10 @@ require 'zold/sync_wallets'
 require 'zold/remotes'
 require 'zold/commands/create'
 require 'tmpdir'
-require_relative '../test__helper'
-require_relative '../fake_node'
-require_relative '../../lib/zold/stress/pmnts'
-require_relative '../../lib/zold/stress/stats'
+require_relative 'test__helper'
+require_relative 'fake_node'
+require_relative '../lib/zold/pmnts'
+require_relative '../lib/zold/stats'
 
 class PmntsTest < Minitest::Test
   def test_pays_one_on_one

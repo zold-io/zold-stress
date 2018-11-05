@@ -12,34 +12,44 @@
 #
 # THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require 'minitest/autorun'
-require_relative '../test__helper'
-require_relative '../../lib/zold/stress/stats'
+# Payments still flying in air.
+# Author:: Yegor Bugayenko (yegor256@gmail.com)
+# Copyright:: Copyright (c) 2018 Yegor Bugayenko
+# License:: MIT
+module Zold
+  # Flying payments.
+  class Air
+    def initialize
+      @mutex = Mutex.new
+      @all = []
+    end
 
-class StatsTest < Minitest::Test
-  def test_aggregates_metrics
-    stats = Zold::Stress::Stats.new
-    m = 'metric-1'
-    stats.put(m, 0.1)
-    stats.put(m, 3.0)
-    assert(stats.to_json[m])
-    assert_equal(1.55, stats.to_json[m][:avg])
-  end
+    def to_json
+      {
+        'total': @all.count
+      }
+    end
 
-  def test_filters_out_too_old_values
-    stats = Zold::Stress::Stats.new(age: 0.1)
-    m = 'metric-1'
-    stats.put(m, 1)
-    stats.put(m, 2)
-    assert_equal(2, stats.to_json[m][:total])
-    sleep 0.2
-    stats.put(m, 2)
-    assert_equal(1, stats.to_json[m][:total])
+    def fetch
+      @all
+    end
+
+    def add(pmt)
+      @mutex.synchronize do
+        @all << pmt
+      end
+    end
+
+    def delete(pmt)
+      @mutex.synchronize do
+        @all.delete(pmt)
+      end
+    end
   end
 end
