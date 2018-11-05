@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2018 Yegor Bugayenko
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the 'Software'), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+STDOUT.sync = true
+
+start = Time.now
+
+require 'slop'
+require 'rainbow'
+require 'zold/log'
+require 'zold/age'
+require 'zold/wallet'
+require 'zold/wallets'
+require 'zold/sync_wallets'
+require 'zold/cached_wallets'
+require 'zold/remotes'
+require_relative '../lib/zold/stress'
+
+Thread.current.name = 'main'
+
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
+
+log = Zold::Log::Regular.new
+
+begin
+  opts = Slop.parse(ARGV, strict: false, suppress_errors: true) do |o|
+    o.banner = "Usage: zold-stress [options]
+Available options:"
+    o.string '--wallet',
+      'Wallet ID where we start from',
+      required: true
+    o.string '--private-key',
+      'The location of RSA private key (default: ~/.ssh/id_rsa)',
+      require: true,
+      default: File.expand_path('~/.ssh/id_rsa')
+    o.string '--public-key',
+      'The location of RSA public key (default: ~/.ssh/id_rsa.pub)',
+      require: true,
+      default: File.expand_path('~/.ssh/id_rsa.pub')
+    o.string '--home',
+      "Home directory (default: #{Dir.pwd})",
+      default: Dir.pwd
+    o.string '--network',
+      "The name of the network we work in (default: #{Zold::Wallet::MAIN_NETWORK}",
+      required: true,
+      default: Zold::Wallet::MAIN_NETWORK
+    o.bool '-h', '--help', 'Show these instructions'
+    o.on '--no-colors', 'Disable colors in the ouput' do
+      Rainbow.enabled = false
+    end
+    o.on '--verbose', 'Enable extra logging information' do
+      log = Zold::Log::Verbose.new
+    end
+  end
+
+  log = Zold::Log::Sync.new(log)
+
+  if opts.help?
+    log.info(opts.to_s)
+    exit
+  end
+
+  home = File.expand_path(opts[:home])
+  FileUtils.mkdir_p(home)
+  Dir.chdir(home)
+  log.debug("Home directory: #{home}")
+
+  zoldata = File.join(home, '.zoldata')
+
+  wallets = Zold::SyncWallets.new(
+    Zold::CachedWallets.new(Zold::Wallets.new(home)),
+    log: log
+  )
+  remotes = Zold::Remotes.new(file: File.join(zoldata, 'remotes'), network: opts['network'])
+  remotes.defaults
+  copies = File.join(zoldata, 'copies')
+
+  log.debug("Network: #{opts['network']} (#{opts['network'] == Zold::Wallet::MAIN_NETWORK ? 'main' : 'test'} net)")
+
+  Stress.new(
+    id: Zold::Id.new(opts['wallet']),
+    pub: Zold::Key.new(file: opts['public-key']),
+    pvt: Zold::Key.new(file: opts['private-key']),
+    wallets: wallets,
+    remotes: remotes,
+    copies: copies,
+    log: log
+  ).run
+rescue StandardError => ex
+  log.error("#{ex.message} (#{ex.class.name})")
+  puts(ex.backtrace)
+  exit(-1)
+end
+
+log.debug("Successfully finished in #{Zold::Age.new(start)}")

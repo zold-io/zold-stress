@@ -1,0 +1,18 @@
+AllCops:
+  DisplayCopNames: true
+  TargetRubyVersion: 2.3.3
+
+Style/EndOfLine:
+  EnforcedStyle: lf
+Metrics/LineLength:
+  Max: 120
+Metrics/AbcSize:
+  Max: 25
+Metrics/MethodLength:
+  Max: 25
+Metrics/ClassLength:
+  Max: 150
+Metrics/ParameterLists:
+  Max: 7
+Layout/AlignParameters:
+  Enabled: false
