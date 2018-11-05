@@ -35,7 +35,7 @@ require 'zold/commands/node'
 require 'tmpdir'
 require_relative 'test__helper'
 require_relative 'fake_node'
-require_relative '../objects/stress'
+require_relative '../lib/zold/stress'
 
 class StressTest < Minitest::Test
   def test_runs_a_few_full_cycles
@@ -78,7 +78,7 @@ class StressTest < Minitest::Test
         Zold::Push.new(wallets: wallets, remotes: remotes, log: test_log).run(
           ['push', '0000000000000000', id.to_s, '--ignore-score-weakness']
         )
-        yield Stress.new(
+        yield Zold::Stress.new(
           id: id,
           pub: Zold::Key.new(file: 'test-assets/id_rsa.pub'),
           pvt: Zold::Key.new(file: 'test-assets/id_rsa'),

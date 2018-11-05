@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require 'parallelize'
 require 'zold/log'
 require 'zold/id'
 require 'zold/key'
@@ -26,6 +25,7 @@ require 'zold/amount'
 require 'zold/commands/create'
 require 'zold/commands/pull'
 require 'zold/commands/remove'
+require 'parallelize'
 require_relative 'stats'
 
 # Pool of wallets.
@@ -33,6 +33,7 @@ require_relative 'stats'
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
 module Zold::Stress
+  # Pool of wallets.
   class Pool
     def initialize(id:, pub:, wallets:, remotes:, copies:, stats:, log: Zold::Log::Quiet.new)
       @id = id

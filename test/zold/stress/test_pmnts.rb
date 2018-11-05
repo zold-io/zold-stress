@@ -27,10 +27,10 @@ require 'zold/sync_wallets'
 require 'zold/remotes'
 require 'zold/commands/create'
 require 'tmpdir'
-require_relative 'test__helper'
-require_relative 'fake_node'
-require_relative '../objects/pmnts'
-require_relative '../objects/stats'
+require_relative '../test__helper'
+require_relative '../fake_node'
+require_relative '../../lib/zold/stress/pmnts'
+require_relative '../../lib/zold/stress/stats'
 
 class PmntsTest < Minitest::Test
   def test_pays_one_on_one
@@ -46,11 +46,11 @@ class PmntsTest < Minitest::Test
       Zold::Pay.new(wallets: wallets, remotes: remotes, log: test_log).run(
         ['pay', Zold::Id::ROOT.to_s, id.to_s, '7.00', 'start', '--private-key=test-assets/id_rsa']
       )
-      sent = Pmnts.new(
+      sent = Zold::Stress::Pmnts.new(
         pvt: Zold::Key.new(file: 'test-assets/id_rsa'),
         wallets: wallets,
         remotes: remotes,
-        stats: Stats.new(log: test_log),
+        stats: Zold::Stress::Stats.new(log: test_log),
         log: test_log
       ).send
       assert_equal(1, sent.count)
@@ -79,11 +79,11 @@ class PmntsTest < Minitest::Test
         )
         ids << id
       end
-      sent = Pmnts.new(
+      sent = Zold::Stress::Pmnts.new(
         pvt: Zold::Key.new(file: 'test-assets/id_rsa'),
         wallets: wallets,
         remotes: remotes,
-        stats: Stats.new(log: test_log),
+        stats: Zold::Stress::Stats.new(log: test_log),
         log: test_log
       ).send
       assert_equal(total * total, sent.count)

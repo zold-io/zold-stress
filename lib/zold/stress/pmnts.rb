@@ -30,6 +30,7 @@ require_relative 'stats'
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
 module Zold::Stress
+  # Payments to send in a batch.
   class Pmnts
     def initialize(pvt:, wallets:, remotes:, stats:, log: Zold::Log::Quiet.new)
       raise 'Private RSA key can\'t be nil' if pvt.nil?

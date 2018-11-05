@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 require 'backtrace'
-require 'parallelize'
+# require 'parallelize'
 require 'zold/key'
 require 'zold/id'
 require 'zold/commands/push'
