@@ -18,8 +18,8 @@ Feature: Gem Package
     set -x
     set -e
     cd zold
-    gem build zold.gemspec
-    gem specification --ruby zold-*.gem > ../spec.rb
+    gem build zold-stress.gemspec
+    gem specification --ruby zold-stress-*.gem > ../spec.rb
     cd ..
     ruby execs.rb
     """

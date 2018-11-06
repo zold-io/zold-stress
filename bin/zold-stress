@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,7 +34,7 @@ require 'zold/wallets'
 require 'zold/sync_wallets'
 require 'zold/cached_wallets'
 require 'zold/remotes'
-require_relative '../lib/zold/stress'
+require_relative '../lib/zold/stress/round'
 
 Thread.current.name = 'main'
 
@@ -98,7 +98,7 @@ Available options:"
 
   log.debug("Network: #{opts['network']} (#{opts['network'] == Zold::Wallet::MAIN_NETWORK ? 'main' : 'test'} net)")
 
-  Stress.new(
+  Zold::Stress::Round.new(
     id: Zold::Id.new(opts['wallet']),
     pub: Zold::Key.new(file: opts['public-key']),
     pvt: Zold::Key.new(file: opts['private-key']),

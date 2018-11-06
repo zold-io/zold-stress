@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,9 +35,9 @@ require 'zold/commands/pay'
 require 'zold/commands/push'
 require 'zold/commands/node'
 require 'tmpdir'
-require_relative 'test__helper'
+require_relative '../test__helper'
 require_relative 'fake_node'
-require_relative '../../lib/zold/stress'
+require_relative '../../../lib/zold/stress/round'
 
 class StressTest < Minitest::Test
   def test_runs_a_few_full_cycles
@@ -60,28 +62,28 @@ class StressTest < Minitest::Test
   private
 
   def exec
-    FakeNode.new(Zold::Log::Quiet.new).exec do |port|
+    Zold::Stress::FakeNode.new(Zold::Log::Quiet.new).exec do |port|
       Dir.mktmpdir do |dir|
         wallets = Zold::CachedWallets.new(Zold::SyncWallets.new(Zold::Wallets.new(dir)))
         remotes = Zold::Remotes.new(file: File.join(dir, 'remotes'), network: 'test')
         remotes.clean
         remotes.add('localhost', port)
         Zold::Create.new(wallets: wallets, log: test_log).run(
-          ['create', '--public-key=test-assets/id_rsa.pub', '0000000000000000', '--network=test']
+          ['create', '--public-key=fixtures/id_rsa.pub', '0000000000000000', '--network=test']
         )
         id = Zold::Create.new(wallets: wallets, log: test_log).run(
-          ['create', '--public-key=test-assets/id_rsa.pub', '--network=test']
+          ['create', '--public-key=fixtures/id_rsa.pub', '--network=test']
         )
         Zold::Pay.new(wallets: wallets, remotes: remotes, log: test_log).run(
-          ['pay', '0000000000000000', id.to_s, '1.00', 'start', '--private-key=test-assets/id_rsa']
+          ['pay', '0000000000000000', id.to_s, '1.00', 'start', '--private-key=fixtures/id_rsa']
         )
         Zold::Push.new(wallets: wallets, remotes: remotes, log: test_log).run(
           ['push', '0000000000000000', id.to_s, '--ignore-score-weakness']
         )
-        yield Zold::Stress.new(
+        yield Zold::Stress::Round.new(
           id: id,
-          pub: Zold::Key.new(file: 'test-assets/id_rsa.pub'),
-          pvt: Zold::Key.new(file: 'test-assets/id_rsa'),
+          pub: Zold::Key.new(file: 'fixtures/id_rsa.pub'),
+          pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
           wallets: wallets,
           remotes: remotes,
           copies: File.join(dir, 'copies'),

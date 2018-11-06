@@ -23,7 +23,7 @@
 require 'tmpdir'
 require 'slop'
 require 'English'
-require_relative '../../lib/zold'
+require 'zold'
 
 Before do
   @cwd = Dir.pwd

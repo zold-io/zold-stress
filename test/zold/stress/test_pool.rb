@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,38 @@
 # SOFTWARE.
 
 require 'minitest/autorun'
+require 'zold/key'
 require 'zold/id'
-require 'parallelize'
-require_relative 'test__helper'
-require_relative '../../lib/zold/air'
+require 'zold/log'
+require 'zold/wallets'
+require 'zold/sync_wallets'
+require 'zold/remotes'
+require 'tmpdir'
+require_relative '../test__helper'
+require_relative 'fake_node'
+require_relative '../../../lib/zold/stress/pool'
+require_relative '../../../lib/zold/stress/stats'
 
-class AirTest < Minitest::Test
-  def test_adds_and_removes
-    air = Zold::Stress::Air.new
-    pmt = { start: Time.now, source: Zold::Id::ROOT, target: Zold::Id::ROOT, details: 'Hi!' }
-    air.add(pmt)
-    assert_equal(1, air.fetch.count)
-    air.fetch.each do |p|
-      assert_equal(pmt, p)
+class PoolTest < Minitest::Test
+  def test_reloads_wallets
+    Zold::Stress::FakeNode.new(test_log).exec do |port|
+      Dir.mktmpdir do |home|
+        wallets = Zold::SyncWallets.new(Zold::Wallets.new(home))
+        remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
+        remotes.clean
+        remotes.add('localhost', port)
+        size = 3
+        Zold::Stress::Pool.new(
+          id: Zold::Id.new('0123456701234567'),
+          pub: Zold::Key.new(file: 'fixtures/id_rsa.pub'),
+          wallets: wallets,
+          remotes: remotes,
+          copies: File.join(home, 'copies'),
+          stats: Zold::Stress::Stats.new(log: test_log),
+          log: test_log
+        ).rebuild(size, ['--ignore-score-weakness', '--network=test'])
+        assert_equal(size, wallets.all.count)
+      end
     end
-    air.delete(pmt)
-    assert_equal(0, air.fetch.count)
   end
 end

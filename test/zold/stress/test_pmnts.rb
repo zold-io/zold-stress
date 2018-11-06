@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,10 +29,10 @@ require 'zold/sync_wallets'
 require 'zold/remotes'
 require 'zold/commands/create'
 require 'tmpdir'
-require_relative 'test__helper'
+require_relative '../test__helper'
 require_relative 'fake_node'
-require_relative '../lib/zold/pmnts'
-require_relative '../lib/zold/stats'
+require_relative '../../../lib/zold/stress/pmnts'
+require_relative '../../../lib/zold/stress/stats'
 
 class PmntsTest < Minitest::Test
   def test_pays_one_on_one
@@ -38,16 +40,16 @@ class PmntsTest < Minitest::Test
       wallets = Zold::SyncWallets.new(Zold::Wallets.new(home))
       remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
       Zold::Create.new(wallets: wallets, log: test_log).run(
-        ['create', '--public-key=test-assets/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
+        ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
       )
       id = Zold::Create.new(wallets: wallets, log: test_log).run(
-        ['create', '--public-key=test-assets/id_rsa.pub', '--network=test']
+        ['create', '--public-key=fixtures/id_rsa.pub', '--network=test']
       )
       Zold::Pay.new(wallets: wallets, remotes: remotes, log: test_log).run(
-        ['pay', Zold::Id::ROOT.to_s, id.to_s, '7.00', 'start', '--private-key=test-assets/id_rsa']
+        ['pay', Zold::Id::ROOT.to_s, id.to_s, '7.00', 'start', '--private-key=fixtures/id_rsa']
       )
       sent = Zold::Stress::Pmnts.new(
-        pvt: Zold::Key.new(file: 'test-assets/id_rsa'),
+        pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
         wallets: wallets,
         remotes: remotes,
         stats: Zold::Stress::Stats.new(log: test_log),
@@ -66,21 +68,21 @@ class PmntsTest < Minitest::Test
       wallets = Zold::Wallets.new(home)
       remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
       Zold::Create.new(wallets: wallets, log: test_log).run(
-        ['create', '--public-key=test-assets/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
+        ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
       )
       total = 6
       ids = []
       total.times do
         id = Zold::Create.new(wallets: wallets, log: test_log).run(
-          ['create', '--public-key=test-assets/id_rsa.pub', '--network=test']
+          ['create', '--public-key=fixtures/id_rsa.pub', '--network=test']
         )
         Zold::Pay.new(wallets: wallets, remotes: remotes, log: test_log).run(
-          ['pay', Zold::Id::ROOT.to_s, id.to_s, '7.00', 'start', '--private-key=test-assets/id_rsa']
+          ['pay', Zold::Id::ROOT.to_s, id.to_s, '7.00', 'start', '--private-key=fixtures/id_rsa']
         )
         ids << id
       end
       sent = Zold::Stress::Pmnts.new(
-        pvt: Zold::Key.new(file: 'test-assets/id_rsa'),
+        pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
         wallets: wallets,
         remotes: remotes,
         stats: Zold::Stress::Stats.new(log: test_log),

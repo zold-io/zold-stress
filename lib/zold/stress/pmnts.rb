@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,7 +31,7 @@ require_relative 'stats'
 # Author:: Yegor Bugayenko (yegor256@gmail.com)
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
-module Zold
+module Zold::Stress
   # Payments to send in a batch.
   class Pmnts
     def initialize(pvt:, wallets:, remotes:, stats:, log: Zold::Log::Quiet.new)

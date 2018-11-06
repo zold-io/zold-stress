@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,27 +21,21 @@
 # SOFTWARE.
 
 require 'minitest/autorun'
-require_relative 'test__helper'
-require_relative '../lib/zold/stats'
+require 'zold/id'
+require 'parallelize'
+require_relative '../test__helper'
+require_relative '../../../lib/zold/stress/air'
 
-class StatsTest < Minitest::Test
-  def test_aggregates_metrics
-    stats = Zold::Stress::Stats.new
-    m = 'metric-1'
-    stats.put(m, 0.1)
-    stats.put(m, 3.0)
-    assert(stats.to_json[m])
-    assert_equal(1.55, stats.to_json[m][:avg])
-  end
-
-  def test_filters_out_too_old_values
-    stats = Zold::Stress::Stats.new(age: 0.1)
-    m = 'metric-1'
-    stats.put(m, 1)
-    stats.put(m, 2)
-    assert_equal(2, stats.to_json[m][:total])
-    sleep 0.2
-    stats.put(m, 2)
-    assert_equal(1, stats.to_json[m][:total])
+class AirTest < Minitest::Test
+  def test_adds_and_removes
+    air = Zold::Stress::Air.new
+    pmt = { start: Time.now, source: Zold::Id::ROOT, target: Zold::Id::ROOT, details: 'Hi!' }
+    air.add(pmt)
+    assert_equal(1, air.fetch.count)
+    air.fetch.each do |p|
+      assert_equal(pmt, p)
+    end
+    air.delete(pmt)
+    assert_equal(0, air.fetch.count)
   end
 end

@@ -3,14 +3,14 @@ Feature: Command Line Processing
   Zold as a command line tool
 
   Scenario: Help can be printed
-    When I run bin/zold with "-h"
+    When I run bin/zold-stress with "-h"
     Then Exit code is zero
     And Stdout contains "--help"
 
   Scenario: Version can be printed
-    When I run bin/zold with "--version"
+    When I run bin/zold-stress with "--version"
     Then Exit code is zero
 
-  Scenario: Wallet can be created
-    When I run bin/zold with "--trace --public-key=id_rsa.pub create"
+  Scenario: Test round can be executed
+    When I run bin/zold-stress with "--public-key=id_rsa.pub --private-key=id_rsa --wallet=0123456701234567"
     Then Exit code is zero

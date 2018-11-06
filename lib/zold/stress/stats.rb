@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,37 +20,58 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Payments still flying in air.
+require 'time'
+require 'backtrace'
+require 'zold/log'
+
+# Pool of wallets.
 # Author:: Yegor Bugayenko (yegor256@gmail.com)
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
-module Zold
-  # Flying payments.
-  class Air
-    def initialize
+module Zold::Stress
+  # Stats
+  class Stats
+    def initialize(age: 24 * 60 * 60, log: Zold::Log::Quiet.new)
+      @age = age
+      @history = {}
       @mutex = Mutex.new
-      @all = []
+      @log = log
     end
 
     def to_json
-      {
-        'total': @all.count
-      }
+      @history.map do |m, h|
+        data = h.map { |a| a[:value] }
+        sum = data.inject(&:+) || 0
+        [
+          m,
+          {
+            'total': data.count,
+            'sum': sum,
+            'avg': (data.empty? ? 0 : (sum / data.count)),
+            'max': data.max || 0,
+            'min': data.min || 0,
+            'age': (h.map { |a| a[:time] }.max || 0) - (h.map { |a| a[:time] }.min || 0)
+          }
+        ]
+      end.to_h
     end
 
-    def fetch
-      @all
+    def exec(metric, swallow: true)
+      start = Time.now
+      yield
+      put(metric + '_ok', Time.now - start)
+    rescue StandardError => ex
+      @log.error(Backtrace.new(ex))
+      put(metric + '_error', Time.now - start)
+      raise ex unless swallow
     end
 
-    def add(pmt)
+    def put(metric, value)
+      raise "Invalid type of \"#{value}\" (#{value.class.name})" unless value.is_a?(Integer) || value.is_a?(Float)
       @mutex.synchronize do
-        @all << pmt
-      end
-    end
-
-    def delete(pmt)
-      @mutex.synchronize do
-        @all.delete(pmt)
+        @history[metric] = [] unless @history[metric]
+        @history[metric] << { time: Time.now, value: value }
+        @history[metric].reject! { |a| a[:time] < Time.now - @age }
       end
     end
   end

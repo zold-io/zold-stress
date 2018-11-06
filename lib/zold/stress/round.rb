@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,18 +26,18 @@ require 'zold/key'
 require 'zold/id'
 require 'zold/commands/push'
 require 'zold/commands/remote'
-require_relative 'stress/stats'
-require_relative 'stress/pool'
-require_relative 'stress/pmnts'
-require_relative 'stress/air'
+require_relative 'stats'
+require_relative 'pool'
+require_relative 'pmnts'
+require_relative 'air'
 
 # Stress test.
 # Author:: Yegor Bugayenko (yegor256@gmail.com)
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
-module Zold
-  # Stress test
-  class Stress
+module Zold::Stress
+  # Full round of stress test
+  class Round
     # Number of wallets to work with
     POOL_SIZE = 8
 
@@ -47,13 +49,13 @@ module Zold
       @remotes = remotes
       @copies = copies
       @log = log
-      @stats = Stats.new(log: log)
-      @air = Air.new
+      @stats = Zold::Stress::Stats.new(log: log)
+      @air = Zold::Stress::Air.new
     end
 
     def to_json
       {
-        'version': VERSION,
+        'version': Zold::VERSION,
         'remotes': @remotes.all.count,
         'wallets': @wallets.all.map do |id|
           @wallets.find(id) do |w|
@@ -72,19 +74,19 @@ module Zold
     def run(opts: [])
       @stats.exec('cycle') do
         update(opts)
-        pool = Pool.new(
+        pool = Zold::Stress::Pool.new(
           id: @id, pub: @pub, wallets: @wallets,
           remotes: @remotes, copies: @copies, stats: @stats,
           log: @log
         )
-        pool.rebuild(Stress::POOL_SIZE, opts)
+        pool.rebuild(POOL_SIZE, opts)
         @log.info("There are #{@wallets.all.count} wallets in the pool after rebuild")
         @wallets.all.peach(Concurrent.processor_count * 8) do |id|
           Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @log).run(
             ['push', id.to_s] + opts
           )
         end
-        sent = Pmnts.new(
+        sent = Zold::Stress::Pmnts.new(
           pvt: @pvt, wallets: @wallets,
           remotes: @remotes, stats: @stats,
           log: @log

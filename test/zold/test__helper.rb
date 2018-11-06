@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2016-2018 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,20 +20,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require 'minitest/autorun'
-require 'zold/log'
-
 STDOUT.sync = true
 
 ENV['RACK_ENV'] = 'test'
 
-require 'simplecov'
-SimpleCov.start
-if ENV['CI'] == 'true'
-  require 'codecov'
-  SimpleCov.formatter = SimpleCov::Formatter::Codecov
-end
+# require 'simplecov'
+# SimpleCov.start
+# if ENV['CI'] == 'true'
+#   require 'codecov'
+#   SimpleCov.formatter = SimpleCov::Formatter::Codecov
+# end
 
+require 'minitest/autorun'
 module Minitest
   class Test
     def test_log

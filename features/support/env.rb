@@ -23,4 +23,4 @@
 ENV['RACK_ENV'] = 'test'
 
 require 'simplecov'
-require_relative '../../lib/zold'
+require 'zold'
