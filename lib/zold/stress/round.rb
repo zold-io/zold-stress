@@ -110,19 +110,22 @@ in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air:
 
     def pull
       start = Time.now
-      @air.fetch.group_by { |p| p[:target] }.each do |a|
-        if @wallets.find(a[0], &:exists?)
-          Zold::Remove.new(wallets: @wallets, log: @vlog).run(
-            ['remove', a[0].to_s]
-          )
-        end
+      targets = @air.fetch.group_by { |p| p[:target] }.map { |a| a[0] }
+      targets.each do |id|
+        next unless @wallets.find(id, &:exists?)
+        Zold::Remove.new(wallets: @wallets, log: @vlog).run(
+          ['remove', id.to_s]
+        )
+      end
+      targets.peach(@opts['threads']) do |id|
         @stats.exec('pull') do
           Zold::Pull.new(wallets: @wallets, remotes: @remotes, copies: @copies, log: @vlog).run(
-            ['pull', a[0].to_s, "--network=#{@opts['network']}"] + @opts.arguments
+            ['pull', id.to_s, "--network=#{@opts['network']}"] + @opts.arguments
           )
         end
       end
-      @log.info("There are #{@wallets.all.count} wallets left, after the pull in #{Zold::Age.new(start)}")
+      @log.info("There are #{@wallets.all.count} wallets left, \
+after the pull of #{targets.count} in #{Zold::Age.new(start)}")
     end
 
     def match

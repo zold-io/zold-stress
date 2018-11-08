@@ -44,11 +44,10 @@ class StressTest < Minitest::Test
   def test_runs_a_few_full_cycles
     Zold::Stress::FakeNode.new(Zold::Log::Quiet.new).exec do |port|
       Dir.mktmpdir do |home|
-        wallets = Zold::CachedWallets.new(Zold::SyncWallets.new(Zold::Wallets.new(home)))
         remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
         remotes.clean
         remotes.add('localhost', port)
-        wallets = Zold::SyncWallets.new(Zold::Wallets.new(home))
+        wallets = Zold::SyncWallets.new(Zold::CachedWallets.new(Zold::Wallets.new(home)))
         Zold::Create.new(wallets: wallets, log: test_log).run(
           ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
         )
@@ -57,11 +56,12 @@ class StressTest < Minitest::Test
         end
         stats = Zold::Stress::Stats.new
         air = Zold::Stress::Air.new
+        batch = 20
         round = Zold::Stress::Round.new(
           pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
           wallets: wallets, remotes: remotes,
           air: air, stats: stats,
-          opts: test_opts('--pool=3', '--batch=4'),
+          opts: test_opts('--pool=5', "--batch=#{batch}"),
           copies: File.join(home, 'copies'),
           log: test_log, vlog: test_log
         )
@@ -71,7 +71,7 @@ class StressTest < Minitest::Test
         attempt = 0
         loop do
           break if air.fetch.empty?
-          break if attempt > 10
+          break if attempt > 50
           round.pull
           round.match
           test_log.info(stats.to_console)
@@ -79,7 +79,7 @@ class StressTest < Minitest::Test
           sleep 0.2
         end
         assert(air.fetch.empty?)
-        assert_equal(4, stats.total('arrived'))
+        assert_equal(batch, stats.total('arrived'))
       end
     end
   end

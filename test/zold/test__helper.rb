@@ -31,6 +31,7 @@ ENV['RACK_ENV'] = 'test'
 #   SimpleCov.formatter = SimpleCov::Formatter::Codecov
 # end
 
+require 'concurrent'
 require 'minitest/autorun'
 module Minitest
   class Test
@@ -43,7 +44,7 @@ module Minitest
       Slop.parse(argv + ['--ignore-score-weakness', '--network=test'], suppress_errors: true) do |o|
         o.integer '--pool', default: 3
         o.integer '--rounds', default: 1
-        o.integer '--threads', default: 4
+        o.integer '--threads', default: Concurrent.processor_count * 2
         o.integer '--batch', default: 4
         o.string '--private-key', default: 'fixtures/id_rsa.pub'
         o.string '--network', default: 'test'

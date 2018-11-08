@@ -15,8 +15,10 @@ Metrics/BlockLength:
 Metrics/ClassLength:
   Max: 150
 Metrics/ParameterLists:
-  Max: 7
+  Max: 10
 Layout/AlignParameters:
+  Enabled: false
+Layout/MultilineMethodCallIndentation:
   Enabled: false
 Layout/EmptyLineAfterGuardClause:
   Enabled: false

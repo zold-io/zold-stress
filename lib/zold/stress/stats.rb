@@ -34,21 +34,25 @@ module Zold::Stress
   # Stats
   class Stats
     def initialize
+      @start = Time.now
       @history = {}
       @mutex = Mutex.new
     end
 
     def to_console
-      ['update', 'push', 'pull', 'paid'].map do |m|
-        if @history[m]
-          t = "#{m}: #{total(m)}/#{Zold::Age.new(Time.now - avg(m), limit: 1)}"
-          errors = total(m + '_error')
-          t += errors.zero? ? '' : '/' + Rainbow(errors.to_s).green
-          t
-        else
-          "#{m}: none"
+      [
+        "#{(total('arrived') / (Time.now - @start)).round(2)} tps",
+        %w[update push pull paid].map do |m|
+          if @history[m]
+            t = "#{m}: #{total(m)}/#{Zold::Age.new(Time.now - avg(m), limit: 1)}"
+            errors = total(m + '_error')
+            t += errors.zero? ? '' : '/' + Rainbow(errors.to_s).red
+            t
+          else
+            "#{m}: none"
+          end
         end
-      end.join('; ')
+      ].join('; ')
     end
 
     def total(metric)

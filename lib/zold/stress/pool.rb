@@ -51,7 +51,7 @@ module Zold::Stress
     def rebuild
       raise "There are no wallets in the pool at #{@wallets.path}, at least one is needed" if @wallets.all.empty?
       balances = @wallets.all
-        .map { |id| {id: id, balance: @wallets.find(id, &:balance)} }
+        .map { |id| { id: id, balance: @wallets.find(id, &:balance) } }
         .sort_by { |h| h[:balance] }
         .reverse
       balances.last([balances.count - @opts['pool'], 0].max).each do |h|
@@ -67,7 +67,8 @@ module Zold::Stress
           )
         end
       end
-      raise "There is no money in the pool of #{balances.count} wallets at #{@wallets.path}" if balances[0][:balance].zero?
+      return unless balances[0][:balance].zero?
+      raise "There is no money in the pool of #{balances.count} wallets at #{@wallets.path}"
     end
   end
 end

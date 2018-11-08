@@ -48,16 +48,17 @@ module Zold::Stress
     def send
       raise 'Too few wallets in the pool' if @wallets.all.count < 2
       paid = []
+      all = @wallets.all
       Tempfile.open do |f|
         File.write(f, @pvt.to_s)
         loop do
-          source = @wallets.all.sample
+          source = all.sample
           balance = @wallets.find(source, &:balance)
           next if balance.negative? || balance.zero?
-          amount = balance / @wallets.all.count
+          amount = balance / all.count
           next if amount < Zold::Amount.new(zld: 0.0001)
           loop do
-            target = @wallets.all.sample
+            target = all.sample
             next if source == target
             paid << pay_one(source, target, amount, f.path)
             break

@@ -59,7 +59,7 @@ Available options:"
       "How many threads to use for each operation (default: #{Concurrent.processor_count * 8})",
       default: Concurrent.processor_count * 8
     o.integer '-b', '--batch',
-      "How many transactions to send in each round (default: 64)",
+      'How many transactions to send in each round (default: 64)',
       default: 64
     o.string '--private-key',
       'The location of RSA private key (default: ~/.ssh/id_rsa)',
@@ -106,12 +106,12 @@ Available options:"
     wallets: wallets, remotes: remotes, copies: copies,
     stats: stats, air: air, log: log, opts: opts
   )
-  opts['rounds'].times do |r|
+  opts['rounds'].times do
     round.update
     round.prepare
-    # round.send
-    # round.pull
-    # round.match
+    round.send
+    round.pull
+    round.match
     log.info(stats.to_console)
   end
 rescue StandardError => ex
