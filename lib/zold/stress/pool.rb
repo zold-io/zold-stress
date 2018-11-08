@@ -37,46 +37,37 @@ require_relative 'stats'
 module Zold::Stress
   # Pool of wallets.
   class Pool
-    def initialize(id:, pub:, wallets:, remotes:, copies:, stats:, log: Zold::Log::Quiet.new)
-      @id = id
-      @pub = pub
+    def initialize(wallets:, remotes:, copies:, stats:, opts:,
+      log: Zold::Log::Quiet.new, vlog: Zold::Log::Quiet.new)
       @wallets = wallets
       @remotes = remotes
       @copies = copies
       @log = log
+      @vlog = vlog
+      @opts = opts
       @stats = stats
     end
 
-    def rebuild(size, opts = [])
-      candidates = [@id]
-      @wallets.all.each do |id|
-        @wallets.find(id, &:txns).each do |t|
-          next unless t.amount.negative?
-          candidates << t.bnf
-        end
-      end
-      candidates.uniq.shuffle.each do |id|
-        @wallets.all.each do |w|
-          next if @wallets.find(w, &:balance) > Zold::Amount.new(zld: 0.01)
-          Zold::Remove.new(wallets: @wallets, log: @log).run(
-            ['remove', w.to_s]
-          )
-        end
-        break if @wallets.all.count > size
-        @stats.exec('pull') do
-          Zold::Pull.new(wallets: @wallets, remotes: @remotes, copies: @copies, log: @log).run(
-            ['pull', id.to_s] + opts
-          )
-        end
+    def rebuild
+      raise "There are no wallets in the pool at #{@wallets.path}, at least one is needed" if @wallets.all.empty?
+      balances = @wallets.all
+        .map { |id| {id: id, balance: @wallets.find(id, &:balance)} }
+        .sort_by { |h| h[:balance] }
+        .reverse
+      balances.last([balances.count - @opts['pool'], 0].max).each do |h|
+        Zold::Remove.new(wallets: @wallets, log: @vlog).run(
+          ['remove', h[:id].to_s]
+        )
       end
       Tempfile.open do |f|
-        File.write(f, @pub.to_s)
-        while @wallets.all.count < size
-          Zold::Create.new(wallets: @wallets, log: @log).run(
-            ['create', "--public-key=#{f.path}"] + opts
+        File.write(f, @wallets.find(balances[0][:id], &:key).to_s)
+        while @wallets.all.count < @opts['pool']
+          Zold::Create.new(wallets: @wallets, log: @vlog).run(
+            ['create', "--public-key=#{f.path}", "--network=#{@opts['network']}"] + @opts.arguments
           )
         end
       end
+      raise "There is no money in the pool of #{balances.count} wallets at #{@wallets.path}" if balances[0][:balance].zero?
     end
   end
 end

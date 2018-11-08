@@ -28,6 +28,7 @@ require 'zold/wallets'
 require 'zold/sync_wallets'
 require 'zold/remotes'
 require 'tmpdir'
+require 'slop'
 require_relative '../test__helper'
 require_relative 'fake_node'
 require_relative '../../../lib/zold/stress/pool'
@@ -38,19 +39,24 @@ class PoolTest < Minitest::Test
     Zold::Stress::FakeNode.new(test_log).exec do |port|
       Dir.mktmpdir do |home|
         wallets = Zold::SyncWallets.new(Zold::Wallets.new(home))
+        Zold::Create.new(wallets: wallets, log: test_log).run(
+          ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
+        )
+        wallets.find(Zold::Id::ROOT) do |w|
+          w.add(Zold::Txn.new(1, Time.now, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))
+        end
         remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
         remotes.clean
         remotes.add('localhost', port)
         size = 3
         Zold::Stress::Pool.new(
-          id: Zold::Id.new('0123456701234567'),
-          pub: Zold::Key.new(file: 'fixtures/id_rsa.pub'),
           wallets: wallets,
           remotes: remotes,
           copies: File.join(home, 'copies'),
-          stats: Zold::Stress::Stats.new(log: test_log),
-          log: test_log
-        ).rebuild(size, ['--ignore-score-weakness', '--network=test'])
+          stats: Zold::Stress::Stats.new,
+          opts: test_opts("--pool=#{size}"),
+          log: test_log, vlog: test_log
+        ).rebuild
         assert_equal(size, wallets.all.count)
       end
     end

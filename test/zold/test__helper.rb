@@ -38,5 +38,16 @@ module Minitest
       require 'zold/log'
       @test_log ||= Zold::Log::Sync.new(Zold::Log::Verbose.new)
     end
+
+    def test_opts(*argv)
+      Slop.parse(argv + ['--ignore-score-weakness', '--network=test'], suppress_errors: true) do |o|
+        o.integer '--pool', default: 3
+        o.integer '--rounds', default: 1
+        o.integer '--threads', default: 4
+        o.integer '--batch', default: 4
+        o.string '--private-key', default: 'fixtures/id_rsa.pub'
+        o.string '--network', default: 'test'
+      end
+    end
   end
 end

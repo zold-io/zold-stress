@@ -34,15 +34,14 @@ require_relative 'stats'
 module Zold::Stress
   # Payments to send in a batch.
   class Pmnts
-    def initialize(pvt:, wallets:, remotes:, stats:, log: Zold::Log::Quiet.new)
-      raise 'Private RSA key can\'t be nil' if pvt.nil?
-      raise 'Private RSA key must be of type Key' unless pvt.is_a?(Zold::Key)
+    def initialize(pvt:, wallets:, remotes:, stats:, opts:,
+      vlog: Zold::Log::Quiet.new, log: Zold::Log::Quiet.new)
       @pvt = pvt
-      raise 'Wallets can\'t be nil' if wallets.nil?
       @wallets = wallets
       @remotes = remotes
-      raise 'Log can\'t be nil' if log.nil?
       @log = log
+      @vlog = vlog
+      @opts = opts
       @stats = stats
     end
 
@@ -51,15 +50,19 @@ module Zold::Stress
       paid = []
       Tempfile.open do |f|
         File.write(f, @pvt.to_s)
-        @wallets.all.each do |source|
+        loop do
+          source = @wallets.all.sample
           balance = @wallets.find(source, &:balance)
           next if balance.negative? || balance.zero?
           amount = balance / @wallets.all.count
           next if amount < Zold::Amount.new(zld: 0.0001)
-          @wallets.all.each do |target|
+          loop do
+            target = @wallets.all.sample
             next if source == target
             paid << pay_one(source, target, amount, f.path)
+            break
           end
+          break if paid.count >= @opts['batch']
         end
       end
       paid
@@ -68,20 +71,26 @@ module Zold::Stress
     private
 
     def pay_one(source, target, amount, pvt)
-      Zold::Taxes.new(wallets: @wallets, remotes: @remotes, log: @log).run(
-        ['taxes', 'pay', source.to_s, "--network=#{@network}", "--private-key=#{pvt}", '--ignore-nodes-absence']
+      Zold::Taxes.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
+        [
+          'taxes', 'pay', source.to_s, "--network=#{@opts['network']}",
+          "--private-key=#{pvt}", '--ignore-nodes-absence'
+        ]
       )
       if @wallets.find(source) { |w| Zold::Tax.new(w).in_debt? }
-        @log.error("The wallet #{source} is still in debt and we can't pay taxes")
+        @log.error("The wallet #{source} is in debt and we can't pay taxes")
         return
       end
       details = SecureRandom.uuid
       @stats.exec('paid', swallow: false) do
-        Zold::Pay.new(wallets: @wallets, remotes: @remotes, log: @log).run(
-          ['pay', source.to_s, target.to_s, amount.to_zld(4), details, "--network=#{@network}", "--private-key=#{pvt}"]
+        Zold::Pay.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
+          [
+            'pay', source.to_s, target.to_s, amount.to_zld(6), details,
+            "--network=#{@opts['network']}", "--private-key=#{pvt}"
+          ]
         )
       end
-      { start: Time.now, source: source, target: target, details: details }
+      { start: Time.now, source: source, target: target, amount: amount, details: details }
     end
   end
 end

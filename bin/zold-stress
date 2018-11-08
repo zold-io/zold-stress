@@ -35,6 +35,8 @@ require 'zold/sync_wallets'
 require 'zold/cached_wallets'
 require 'zold/remotes'
 require_relative '../lib/zold/stress/round'
+require_relative '../lib/zold/stress/stats'
+require_relative '../lib/zold/stress/air'
 
 Thread.current.name = 'main'
 
@@ -47,17 +49,22 @@ begin
   opts = Slop.parse(ARGV, strict: false, suppress_errors: true) do |o|
     o.banner = "Usage: zold-stress [options]
 Available options:"
-    o.string '--wallet',
-      'Wallet ID where we start from',
-      required: true
+    o.integer '-r', '--rounds',
+      'Total amount of paying rounds to complete (default: 16)',
+      default: 16
+    o.integer '-p', '--pool',
+      'From how many wallets to send payments (default: 8)',
+      default: 8
+    o.integer '-t', '--threads',
+      "How many threads to use for each operation (default: #{Concurrent.processor_count * 8})",
+      default: Concurrent.processor_count * 8
+    o.integer '-b', '--batch',
+      "How many transactions to send in each round (default: 64)",
+      default: 64
     o.string '--private-key',
       'The location of RSA private key (default: ~/.ssh/id_rsa)',
       require: true,
       default: File.expand_path('~/.ssh/id_rsa')
-    o.string '--public-key',
-      'The location of RSA public key (default: ~/.ssh/id_rsa.pub)',
-      require: true,
-      default: File.expand_path('~/.ssh/id_rsa.pub')
     o.string '--home',
       "Home directory (default: #{Dir.pwd})",
       default: Dir.pwd
@@ -68,9 +75,6 @@ Available options:"
     o.bool '-h', '--help', 'Show these instructions'
     o.on '--no-colors', 'Disable colors in the ouput' do
       Rainbow.enabled = false
-    end
-    o.on '--verbose', 'Enable extra logging information' do
-      log = Zold::Log::Verbose.new
     end
   end
 
@@ -84,7 +88,6 @@ Available options:"
   home = File.expand_path(opts[:home])
   FileUtils.mkdir_p(home)
   Dir.chdir(home)
-  log.debug("Home directory: #{home}")
 
   zoldata = File.join(home, '.zoldata')
 
@@ -96,21 +99,24 @@ Available options:"
   remotes.defaults
   copies = File.join(zoldata, 'copies')
 
-  log.debug("Network: #{opts['network']} (#{opts['network'] == Zold::Wallet::MAIN_NETWORK ? 'main' : 'test'} net)")
-
-  Zold::Stress::Round.new(
-    id: Zold::Id.new(opts['wallet']),
-    pub: Zold::Key.new(file: opts['public-key']),
+  stats = Zold::Stress::Stats.new
+  air = Zold::Stress::Air.new
+  round = Zold::Stress::Round.new(
     pvt: Zold::Key.new(file: opts['private-key']),
-    wallets: wallets,
-    remotes: remotes,
-    copies: copies,
-    log: log
-  ).run
+    wallets: wallets, remotes: remotes, copies: copies,
+    stats: stats, air: air, log: log, opts: opts
+  )
+  opts['rounds'].times do |r|
+    round.update
+    round.prepare
+    # round.send
+    # round.pull
+    # round.match
+    log.info(stats.to_console)
+  end
 rescue StandardError => ex
-  log.error("#{ex.message} (#{ex.class.name})")
-  puts(ex.backtrace)
+  log.error(Backtrace.new(ex))
   exit(-1)
 end
 
-log.debug("Successfully finished in #{Zold::Age.new(start)}")
+log.info("Successfully finished in #{Zold::Age.new(start)}")

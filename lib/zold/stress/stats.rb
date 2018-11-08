@@ -21,8 +21,10 @@
 # SOFTWARE.
 
 require 'time'
+require 'rainbow'
 require 'backtrace'
 require 'zold/log'
+require 'zold/age'
 
 # Pool of wallets.
 # Author:: Yegor Bugayenko (yegor256@gmail.com)
@@ -31,11 +33,33 @@ require 'zold/log'
 module Zold::Stress
   # Stats
   class Stats
-    def initialize(age: 24 * 60 * 60, log: Zold::Log::Quiet.new)
-      @age = age
+    def initialize
       @history = {}
       @mutex = Mutex.new
-      @log = log
+    end
+
+    def to_console
+      ['update', 'push', 'pull', 'paid'].map do |m|
+        if @history[m]
+          t = "#{m}: #{total(m)}/#{Zold::Age.new(Time.now - avg(m), limit: 1)}"
+          errors = total(m + '_error')
+          t += errors.zero? ? '' : '/' + Rainbow(errors.to_s).green
+          t
+        else
+          "#{m}: none"
+        end
+      end.join('; ')
+    end
+
+    def total(metric)
+      (@history[metric] || []).count
+    end
+
+    def avg(metric)
+      array = @history[metric].map { |a| a[:value] } || []
+      sum = array.inject(&:+) || 0
+      count = [array.count, 1].max
+      sum.to_f / count
     end
 
     def to_json
@@ -61,9 +85,10 @@ module Zold::Stress
       yield
       put(metric + '_ok', Time.now - start)
     rescue StandardError => ex
-      @log.error(Backtrace.new(ex))
       put(metric + '_error', Time.now - start)
       raise ex unless swallow
+    ensure
+      put(metric, Time.now - start)
     end
 
     def put(metric, value)
@@ -71,7 +96,6 @@ module Zold::Stress
       @mutex.synchronize do
         @history[metric] = [] unless @history[metric]
         @history[metric] << { time: Time.now, value: value }
-        @history[metric].reject! { |a| a[:time] < Time.now - @age }
       end
     end
   end

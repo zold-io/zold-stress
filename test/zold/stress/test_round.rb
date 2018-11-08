@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 require 'minitest/autorun'
+require 'slop'
 require 'zold/key'
 require 'zold/id'
 require 'zold/log'
@@ -41,54 +42,44 @@ require_relative '../../../lib/zold/stress/round'
 
 class StressTest < Minitest::Test
   def test_runs_a_few_full_cycles
-    skip
-    exec do |stress|
-      stress.run(delay: 0, cycles: 5, opts: ['--ignore-score-weakness', '--network=test'])
-      json = stress.to_json
-      assert(json['arrived'][:total] > 30)
-      assert_equal(5, json['cycle_ok'][:total])
-    end
-  end
-
-  def test_renders_json
-    exec do |stress|
-      json = stress.to_json
-      assert(json[:wallets])
-      assert(json[:thread])
-      assert(json[:air])
-    end
-  end
-
-  private
-
-  def exec
     Zold::Stress::FakeNode.new(Zold::Log::Quiet.new).exec do |port|
-      Dir.mktmpdir do |dir|
-        wallets = Zold::CachedWallets.new(Zold::SyncWallets.new(Zold::Wallets.new(dir)))
-        remotes = Zold::Remotes.new(file: File.join(dir, 'remotes'), network: 'test')
+      Dir.mktmpdir do |home|
+        wallets = Zold::CachedWallets.new(Zold::SyncWallets.new(Zold::Wallets.new(home)))
+        remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
         remotes.clean
         remotes.add('localhost', port)
+        wallets = Zold::SyncWallets.new(Zold::Wallets.new(home))
         Zold::Create.new(wallets: wallets, log: test_log).run(
-          ['create', '--public-key=fixtures/id_rsa.pub', '0000000000000000', '--network=test']
+          ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
         )
-        id = Zold::Create.new(wallets: wallets, log: test_log).run(
-          ['create', '--public-key=fixtures/id_rsa.pub', '--network=test']
-        )
-        Zold::Pay.new(wallets: wallets, remotes: remotes, log: test_log).run(
-          ['pay', '0000000000000000', id.to_s, '1.00', 'start', '--private-key=fixtures/id_rsa']
-        )
-        Zold::Push.new(wallets: wallets, remotes: remotes, log: test_log).run(
-          ['push', '0000000000000000', id.to_s, '--ignore-score-weakness']
-        )
-        yield Zold::Stress::Round.new(
-          id: id,
-          pub: Zold::Key.new(file: 'fixtures/id_rsa.pub'),
+        wallets.find(Zold::Id::ROOT) do |w|
+          w.add(Zold::Txn.new(1, Time.now, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))
+        end
+        stats = Zold::Stress::Stats.new
+        air = Zold::Stress::Air.new
+        round = Zold::Stress::Round.new(
           pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
-          wallets: wallets,
-          remotes: remotes,
-          copies: File.join(dir, 'copies'),
-          log: Zold::Log::Sync.new(Zold::Log::Regular.new)
+          wallets: wallets, remotes: remotes,
+          air: air, stats: stats,
+          opts: test_opts('--pool=3', '--batch=4'),
+          copies: File.join(home, 'copies'),
+          log: test_log, vlog: test_log
         )
+        round.update
+        round.prepare
+        round.send
+        attempt = 0
+        loop do
+          break if air.fetch.empty?
+          break if attempt > 10
+          round.pull
+          round.match
+          test_log.info(stats.to_console)
+          attempt += 1
+          sleep 0.2
+        end
+        assert(air.fetch.empty?)
+        assert_equal(4, stats.total('arrived'))
       end
     end
   end

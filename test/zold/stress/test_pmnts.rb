@@ -29,6 +29,7 @@ require 'zold/sync_wallets'
 require 'zold/remotes'
 require 'zold/commands/create'
 require 'tmpdir'
+require 'slop'
 require_relative '../test__helper'
 require_relative 'fake_node'
 require_relative '../../../lib/zold/stress/pmnts'
@@ -52,8 +53,9 @@ class PmntsTest < Minitest::Test
         pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
         wallets: wallets,
         remotes: remotes,
-        stats: Zold::Stress::Stats.new(log: test_log),
-        log: test_log
+        stats: Zold::Stress::Stats.new,
+        opts: test_opts('--batch=1'),
+        log: test_log, vlog: test_log
       ).send
       assert_equal(1, sent.count)
       assert_equal(id, sent[0][:source])
@@ -70,9 +72,8 @@ class PmntsTest < Minitest::Test
       Zold::Create.new(wallets: wallets, log: test_log).run(
         ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
       )
-      total = 6
       ids = []
-      total.times do
+      5.times do
         id = Zold::Create.new(wallets: wallets, log: test_log).run(
           ['create', '--public-key=fixtures/id_rsa.pub', '--network=test']
         )
@@ -85,10 +86,11 @@ class PmntsTest < Minitest::Test
         pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
         wallets: wallets,
         remotes: remotes,
-        stats: Zold::Stress::Stats.new(log: test_log),
-        log: test_log
+        stats: Zold::Stress::Stats.new,
+        opts: test_opts('--batch=20'),
+        log: test_log, vlog: test_log
       ).send
-      assert_equal(total * total, sent.count)
+      assert_equal(20, sent.count)
       assert_equal(ids.sort, sent.map { |s| s[:source] }.sort.uniq)
     end
   end

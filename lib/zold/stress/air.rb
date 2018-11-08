@@ -32,12 +32,6 @@ module Zold::Stress
       @all = []
     end
 
-    def to_json
-      {
-        'total': @all.count
-      }
-    end
-
     def fetch
       @all
     end

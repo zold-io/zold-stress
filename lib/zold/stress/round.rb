@@ -38,107 +38,104 @@ require_relative 'air'
 module Zold::Stress
   # Full round of stress test
   class Round
-    # Number of wallets to work with
-    POOL_SIZE = 8
-
-    def initialize(id:, pub:, pvt:, wallets:, remotes:, copies:, log: Zold::Log::Quiet.new)
-      @id = id
-      @pub = pub
+    def initialize(pvt:, wallets:, remotes:, copies:,
+      stats:, air:, opts:, log: Zold::Log::Quiet.new, vlog: Zold::Log::Quiet.new)
       @pvt = pvt
       @wallets = wallets
       @remotes = remotes
       @copies = copies
+      @opts = opts
       @log = log
-      @stats = Zold::Stress::Stats.new(log: log)
-      @air = Zold::Stress::Air.new
+      @stats = stats
+      @air = air
+      @vlog = vlog
     end
 
-    def to_json
-      {
-        'version': Zold::VERSION,
-        'remotes': @remotes.all.count,
-        'wallets': @wallets.all.map do |id|
-          @wallets.find(id) do |w|
-            {
-              'id': w.id,
-              'txns': w.txns.count,
-              'balance': w.balance.to_zld(4)
-            }
-          end
-        end,
-        'thread': @thread ? @thread.status : '-',
-        'air': @air.to_json
-      }.merge(@stats.to_json)
-    end
-
-    def run(opts: [])
-      @stats.exec('cycle') do
-        update(opts)
-        pool = Zold::Stress::Pool.new(
-          id: @id, pub: @pub, wallets: @wallets,
-          remotes: @remotes, copies: @copies, stats: @stats,
-          log: @log
-        )
-        pool.rebuild(POOL_SIZE, opts)
-        @log.info("There are #{@wallets.all.count} wallets in the pool after rebuild")
-        @wallets.all.peach(Concurrent.processor_count * 8) do |id|
-          Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @log).run(
-            ['push', id.to_s] + opts
-          )
-        end
-        sent = Zold::Stress::Pmnts.new(
-          pvt: @pvt, wallets: @wallets,
-          remotes: @remotes, stats: @stats,
-          log: @log
-        ).send
-        @log.info("#{sent.count} payments have been sent")
-        mutex = Mutex.new
-        sent.group_by { |p| p[:source] }.peach(Concurrent.processor_count * 8) do |a|
-          @stats.exec('push') do
-            Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @log).run(
-              ['push', a[0].to_s] + opts
-            )
-            mutex.synchronize do
-              a[1].each { |p| @air.add(p) }
-            end
-          end
-        end
-        @log.info("#{@air.fetch.count} payments are now in the air")
-        @air.fetch.group_by { |p| p[:target] }.each do |a|
-          if @wallets.find(a[0], &:exists?)
-            Zold::Remove.new(wallets: @wallets, log: @log).run(
-              ['remove', a[0].to_s]
-            )
-          end
-          @stats.exec('pull') do
-            Zold::Pull.new(wallets: @wallets, remotes: @remotes, copies: @copies, log: @log).run(
-              ['pull', a[0].to_s] + opts
-            )
-          end
-        end
-        @log.info("There are #{@wallets.all.count} wallets in the pool after re-pull")
-        @air.fetch.each do |p|
-          next unless @wallets.find(p[:target], &:exists?)
-          t = @wallets.find(p[:target], &:txns).find { |x| x.details == p[:details] && x.bnf == p[:source] }
-          next if t.nil?
-          @stats.put('arrived', Time.now - p[:start])
-          @log.info("Payment arrived to #{p[:target]} at ##{t.id} in #{Zold::Age.new(p[:start])}: #{t.details}")
-          @air.delete(p)
-        end
-        @log.info("#{@air.fetch.count} payments are still in the air")
-      end
-    end
-
-    private
-
-    def update(opts)
-      return if opts.include?('--network=test')
-      cmd = Zold::Remote.new(remotes: @remotes, log: @log)
-      args = ['remote'] + opts
+    def update
+      start = Time.now
+      cmd = Zold::Remote.new(remotes: @remotes, log: @vlog)
+      args = ['remote'] + @opts.arguments
       cmd.run(args + ['trim'])
       cmd.run(args + ['reset']) if @remotes.all.empty?
-      cmd.run(args + ['update'])
+      @stats.exec('update') do
+        cmd.run(args + ['update'])
+      end
       cmd.run(args + ['select'])
+      @log.info("List of remotes updated in #{Zold::Age.new(start)}, #{@remotes.all.count} nodes in the list")
+    end
+
+    def prepare
+      start = Time.now
+      pool = Zold::Stress::Pool.new(
+        wallets: @wallets,
+        remotes: @remotes, copies: @copies, stats: @stats,
+        log: @log, opts: @opts, vlog: @vlog
+      )
+      pool.rebuild
+      @wallets.all.peach(@opts['threads']) do |id|
+        @stats.exec('push') do
+          Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
+            ['push', id.to_s, "--network=#{@opts['network']}"] + @opts.arguments
+          )
+        end
+      end
+      @log.info("There are #{@wallets.all.count} wallets in the pool \
+with #{@wallets.all.map { |id| @wallets.find(id, &:balance) }.inject(&:+)} \
+in #{Zold::Age.new(start)}")
+    end
+
+    def send
+      start = Time.now
+      sent = Zold::Stress::Pmnts.new(
+        pvt: @pvt, wallets: @wallets,
+        remotes: @remotes, stats: @stats,
+        log: @log, opts: @opts, vlog: @vlog
+      ).send
+      mutex = Mutex.new
+      sources = sent.group_by { |p| p[:source] }
+      sources.peach(@opts['threads']) do |a|
+        @stats.exec('push') do
+          Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
+            ['push', a[0].to_s, "--network=#{@opts['network']}"] + @opts.arguments
+          )
+          mutex.synchronize do
+            a[1].each { |p| @air.add(p) }
+          end
+        end
+      end
+      @log.info("#{sent.count} payments sent from #{sources.count} wallets, \
+in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air:
+  #{sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n  ")}")
+    end
+
+    def pull
+      start = Time.now
+      @air.fetch.group_by { |p| p[:target] }.each do |a|
+        if @wallets.find(a[0], &:exists?)
+          Zold::Remove.new(wallets: @wallets, log: @vlog).run(
+            ['remove', a[0].to_s]
+          )
+        end
+        @stats.exec('pull') do
+          Zold::Pull.new(wallets: @wallets, remotes: @remotes, copies: @copies, log: @vlog).run(
+            ['pull', a[0].to_s, "--network=#{@opts['network']}"] + @opts.arguments
+          )
+        end
+      end
+      @log.info("There are #{@wallets.all.count} wallets left, after the pull in #{Zold::Age.new(start)}")
+    end
+
+    def match
+      @air.fetch.each do |p|
+        next unless @wallets.find(p[:target], &:exists?)
+        t = @wallets.find(p[:target], &:txns).find { |x| x.details == p[:details] && x.bnf == p[:source] }
+        next if t.nil?
+        @stats.put('arrived', Time.now - p[:start])
+        @log.info("#{p[:amount]} arrived from #{p[:source]} to #{p[:target]} \
+in txn ##{t.id} in #{Zold::Age.new(p[:start])}: #{t.details}")
+        @air.delete(p)
+      end
+      @log.info("#{@air.fetch.count} payments are still in the air")
     end
   end
 end
