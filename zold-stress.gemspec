@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = '2.2'
   s.required_ruby_version = '>=2.3'
   s.name = 'zold-stress'
-  s.version = '0.0.0'
+  s.version = '0.1.0'
   s.license = 'MIT'
   s.summary = 'Zold stress test'
   s.description = 'Stress testing toolkit for Zold network'
