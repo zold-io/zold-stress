@@ -18,7 +18,17 @@ Join our [Telegram group](https://t.me/zold_io) to discuss it all live.
 
 The license is [MIT](https://github.com/zold-io/zold-stress/blob/master/LICENSE.txt).
 
-This is a command line testing toolkit.
+This is a command line Zold network stress testing toolkit. First, you
+create an empty directory. Then, create or pull a Zold wallet there. The
+wallet has to have some money. Preferrably, a small amount, like 1 ZLD. Then,
+you install `zold-stress` Ruby gem, run it, and read the output:
+
+```
+$ gem install zold-stress
+$ zold-stress --help
+```
+
+You will have to install [Ruby](https://www.ruby-lang.org/en/) 2.5.1+ first.
 
 # How to contribute
 
