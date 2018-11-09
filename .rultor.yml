@@ -6,7 +6,7 @@ install: |-
 release:
   script: |-
     bundle install
-    rake
+    rake --quiet
     rm -rf *.gem
     sed -i "s/0\.0\.0/${tag}/g" zold-stress.gemspec
     git add zold-stress.gemspec
@@ -22,5 +22,5 @@ merge:
   commanders: []
   script: |-
     bundle install
-    rake
+    rake --quiet
 deploy: {}
