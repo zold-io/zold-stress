@@ -26,37 +26,20 @@ require 'backtrace'
 require 'zold/log'
 require 'zold/age'
 
-# Pool of wallets.
+# Statistics.
 # Author:: Yegor Bugayenko (yegor256@gmail.com)
 # Copyright:: Copyright (c) 2018 Yegor Bugayenko
 # License:: MIT
 module Zold::Stress
   # Stats
   class Stats
-    def initialize(batch = 0)
-      @batch = batch
+    def initialize
       @history = {}
       @mutex = Mutex.new
     end
 
-    def tps
-      @batch / avg('arrived')
-    end
-
-    def to_console
-      [
-        "#{tps.round(2)} tps",
-        %w[update push pull paid arrived].map do |m|
-          if @history[m]
-            t = "#{m}: #{total(m)}/#{Zold::Age.new(Time.now - avg(m), limit: 1)}"
-            errors = total(m + '_error')
-            t += errors.zero? ? '' : '/' + Rainbow(errors.to_s).red
-            t
-          else
-            "#{m}: none"
-          end
-        end
-      ].join('; ')
+    def exists?(metric)
+      !@history[metric].nil?
     end
 
     def total(metric)
@@ -64,10 +47,12 @@ module Zold::Stress
     end
 
     def avg(metric)
+      sum(metric).to_f / [total(metric), 1].max
+    end
+
+    def sum(metric)
       array = @history[metric].map { |a| a[:value] } || []
-      sum = array.inject(&:+) || 0
-      count = [array.count, 1].max
-      sum.to_f / count
+      array.inject(&:+) || 0
     end
 
     def to_json

@@ -34,6 +34,7 @@ require 'zold/cached_wallets'
 require 'zold/remotes'
 require_relative '../lib/zold/stress/round'
 require_relative '../lib/zold/stress/stats'
+require_relative '../lib/zold/stress/summary'
 require_relative '../lib/zold/stress/air'
 
 Thread.current.name = 'main'
@@ -109,7 +110,8 @@ Available options:"
   end
   copies = File.join(zoldata, 'copies')
 
-  stats = Zold::Stress::Stats.new(opts['batch'])
+  stats = Zold::Stress::Stats.new
+  summary = Zold::Stress::Summary.new(stats, opts['batch'])
   air = Zold::Stress::Air.new
   round = Zold::Stress::Round.new(
     pvt: Zold::Key.new(file: opts['private-key']),
@@ -124,7 +126,7 @@ Available options:"
     round.send
     round.pull
     round.match
-    log.info(stats.to_console)
+    log.info(summary)
   end
   s = Time.now
   loop do
@@ -132,7 +134,7 @@ Available options:"
     break if air.fetch.empty?
     round.pull
     round.match
-    log.info(stats.to_console)
+    log.info(summary)
   end
   unless air.fetch.empty?
     raise "#{air.fetch.count} payments out of #{stats.total('paid')} are still somewhere, we lost them :("

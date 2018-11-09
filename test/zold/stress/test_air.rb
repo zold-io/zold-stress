@@ -33,9 +33,9 @@ class AirTest < Minitest::Test
     air.add(pmt)
     assert_equal(1, air.fetch.count)
     air.fetch.each do |p|
-      assert_equal(pmt, p)
+      assert_equal(pmt[:details], p[:details])
     end
-    air.delete(pmt)
+    air.delete(air.fetch[0])
     assert_equal(0, air.fetch.count)
   end
 end

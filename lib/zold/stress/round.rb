@@ -102,9 +102,11 @@ in #{Zold::Age.new(start)}")
           mutex.synchronize do
             a[1].each { |p| @air.add(p) }
           end
+          @stats.put('output', @wallets.find(a[0], &:size))
         end
       end
-      @log.info("#{sent.count} payments sent from #{sources.count} wallets, \
+      @log.info("#{sent.count} payments for #{sent.map { |s| s[:amount] }.inject(&:+)} \
+sent from #{sources.count} wallets, \
 in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air")
       @log.debug("  #{sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n  ")}")
     end
@@ -112,12 +114,6 @@ in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air")
     def pull
       start = Time.now
       targets = @air.fetch.group_by { |p| p[:target] }.map { |a| a[0] }
-      targets.each do |id|
-        next unless @wallets.find(id, &:exists?)
-        Zold::Remove.new(wallets: @wallets, log: @vlog).run(
-          ['remove', id.to_s]
-        )
-      end
       targets.peach(@opts['threads']) do |id|
         @stats.exec('pull') do
           Zold::Pull.new(wallets: @wallets, remotes: @remotes, copies: @copies, log: @vlog).run(
@@ -125,6 +121,7 @@ in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air")
           )
         end
         @air.pulled(id)
+        @stats.put('input', @wallets.find(id, &:size))
       end
       @log.info("There are #{@wallets.all.count} wallets left, \
 after the pull of #{targets.count} in #{Zold::Age.new(start)}")

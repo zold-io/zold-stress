@@ -39,6 +39,9 @@ require 'tmpdir'
 require_relative '../test__helper'
 require_relative 'fake_node'
 require_relative '../../../lib/zold/stress/round'
+require_relative '../../../lib/zold/stress/stats'
+require_relative '../../../lib/zold/stress/summary'
+require_relative '../../../lib/zold/stress/air'
 
 class StressTest < Minitest::Test
   def test_runs_a_few_full_cycles
@@ -57,6 +60,7 @@ class StressTest < Minitest::Test
         stats = Zold::Stress::Stats.new
         air = Zold::Stress::Air.new
         batch = 20
+        summary = Zold::Stress::Summary.new(stats, batch)
         round = Zold::Stress::Round.new(
           pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
           wallets: wallets, remotes: remotes,
@@ -74,7 +78,7 @@ class StressTest < Minitest::Test
           break if attempt > 50
           round.pull
           round.match
-          test_log.info(stats.to_console)
+          test_log.info(summary)
           attempt += 1
           sleep 0.2
         end
