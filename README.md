@@ -8,6 +8,7 @@
 [![We recommend RubyMine](http://www.elegantobjects.org/rubymine.svg)](https://www.jetbrains.com/ruby/)
 
 [![Build Status](https://travis-ci.org/zold-io/zold-stress.svg)](https://travis-ci.org/zold-io/zold-stress)
+[![Build status](https://ci.appveyor.com/api/projects/status/ds9i925foqfu30cg?svg=true)](https://ci.appveyor.com/project/yegor256/zold-stress)
 [![PDD status](http://www.0pdd.com/svg?name=zold-io/zold-stress)](http://www.0pdd.com/p?name=zold-io/zold-stress)
 [![Gem Version](https://badge.fury.io/rb/zold-stress.svg)](http://badge.fury.io/rb/zold-stress)
 [![Test Coverage](https://img.shields.io/codecov/c/github/zold-io/zold-stress.svg)](https://codecov.io/github/zold-io/zold-stress?branch=master)
