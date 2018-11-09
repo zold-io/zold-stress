@@ -12,6 +12,7 @@
 [![PDD status](http://www.0pdd.com/svg?name=zold-io/zold-stress)](http://www.0pdd.com/p?name=zold-io/zold-stress)
 [![Gem Version](https://badge.fury.io/rb/zold-stress.svg)](http://badge.fury.io/rb/zold-stress)
 [![Test Coverage](https://img.shields.io/codecov/c/github/zold-io/zold-stress.svg)](https://codecov.io/github/zold-io/zold-stress?branch=master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/ad51dc27597d1e728979/maintainability)](https://codeclimate.com/github/zold-io/zold-stress/maintainability)
 
 Here is the [White Paper](https://papers.zold.io/wp.pdf).
 
