@@ -23,8 +23,6 @@
 
 STDOUT.sync = true
 
-start = Time.now
-
 require 'slop'
 require 'rainbow'
 require 'zold/log'
@@ -44,6 +42,7 @@ Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 
 log = Zold::Log::Regular.new
+vlog = Zold::Log::Quiet.new
 
 begin
   opts = Slop.parse(ARGV, strict: false, suppress_errors: true) do |o|
@@ -52,6 +51,9 @@ Available options:"
     o.integer '-r', '--rounds',
       'Total amount of paying rounds to complete (default: 16)',
       default: 16
+    o.integer '-w', '--wait',
+      'For how to long to wait for all payments to arrive (default: 600 seconds)',
+      default: 600
     o.integer '-p', '--pool',
       'From how many wallets to send payments (default: 8)',
       default: 8
@@ -73,12 +75,17 @@ Available options:"
       required: true,
       default: Zold::Wallet::MAIN_NETWORK
     o.bool '-h', '--help', 'Show these instructions'
+    o.on '--verbose', 'Enable extra logging information' do
+      log = Zold::Log::Verbose.new
+      vlog = Zold::Log::Regular.new
+    end
     o.on '--no-colors', 'Disable colors in the ouput' do
       Rainbow.enabled = false
     end
   end
 
   log = Zold::Log::Sync.new(log)
+  vlog = Zold::Log::Sync.new(vlog)
 
   if opts.help?
     log.info(opts.to_s)
@@ -96,7 +103,10 @@ Available options:"
     log: log
   )
   remotes = Zold::Remotes.new(file: File.join(zoldata, 'remotes'), network: opts['network'])
-  remotes.defaults
+  if remotes.all.empty?
+    remotes.defaults
+    log.info("The list of remotes has got default nodes, there are #{remotes.all.count} total")
+  end
   copies = File.join(zoldata, 'copies')
 
   stats = Zold::Stress::Stats.new
@@ -104,19 +114,32 @@ Available options:"
   round = Zold::Stress::Round.new(
     pvt: Zold::Key.new(file: opts['private-key']),
     wallets: wallets, remotes: remotes, copies: copies,
-    stats: stats, air: air, log: log, opts: opts
+    stats: stats, air: air, log: log, vlog: vlog, opts: opts
   )
+
+  start = Time.now
+  round.update
+  round.prepare
   opts['rounds'].times do
-    round.update
-    round.prepare
     round.send
     round.pull
     round.match
     log.info(stats.to_console)
   end
+  s = Time.now
+  loop do
+    break if Time.now > s + opts['wait']
+    break if air.fetch.empty?
+    round.pull
+    round.match
+    log.info(stats.to_console)
+  end
+  unless air.fetch.empty?
+    raise "#{air.fetch.count} payments out of #{stats.total('paid')} are still somewhere, we lost them :("
+  end
+  log.info("Successfully sent and received #{Rainbow(stats.total('arrived')).green} transactions \
+in #{Zold::Age.new(start)}")
 rescue StandardError => ex
   log.error(Backtrace.new(ex))
   exit(-1)
 end
-
-log.info("Successfully finished in #{Zold::Age.new(start)}")

@@ -5,6 +5,7 @@ shopt -s expand_aliases
 
 export RUBYOPT="-W0"
 
+alias zold="zold --network=test"
 alias zold-stress="$1 --network=test"
 
 function reserve_port {

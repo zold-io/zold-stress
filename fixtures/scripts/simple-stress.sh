@@ -15,11 +15,13 @@ function start_node {
   echo ${port}
 }
 
-first=$(start_node)
-trap "halt_nodes ${first}" EXIT
+port=$(start_node)
+trap "halt_nodes ${port}" EXIT
+zold remote clean
+zold remote add localhost ${port}
 
 zold --public-key=id_rsa.pub create 0000000000000000
 zold --public-key=id_rsa.pub create abcdabcdabcdabcd
-zold pay --private-key=id_rsa 0000000000000000 NOPREFIX@abcdabcdabcdabcd 4.95 'To test'
+zold pay --private-key=id_rsa 0000000000000000 abcdabcdabcdabcd 4.95 'To test'
 
-zold-stress --help
+zold-stress --rounds=2 --wait=5 --threads=4 --pool=5 --batch=20 --private-key=id_rsa

@@ -39,9 +39,13 @@ module Zold::Stress
       @mutex = Mutex.new
     end
 
+    def tps
+      total('arrived') / (Time.now - @start)
+    end
+
     def to_console
       [
-        "#{(total('arrived') / (Time.now - @start)).round(2)} tps",
+        "#{tps.round(2)} tps",
         %w[update push pull paid].map do |m|
           if @history[m]
             t = "#{m}: #{total(m)}/#{Zold::Age.new(Time.now - avg(m), limit: 1)}"

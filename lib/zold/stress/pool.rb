@@ -67,8 +67,9 @@ module Zold::Stress
           )
         end
       end
-      return unless balances[0][:balance].zero?
-      raise "There is no money in the pool of #{balances.count} wallets at #{@wallets.path}"
+      return if balances.find { |b| b[:balance].positive? }
+      raise "There is not a single wallet among #{balances.count} with a positive balance, in #{@wallets.path}: \
+  #{balances.map { |b| "#{b[:id]}: #{b[:balance]}" }.join("\n")}"
     end
   end
 end

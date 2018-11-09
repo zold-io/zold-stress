@@ -56,11 +56,12 @@ module Zold::Stress
       cmd = Zold::Remote.new(remotes: @remotes, log: @vlog)
       args = ['remote'] + @opts.arguments
       cmd.run(args + ['trim'])
-      cmd.run(args + ['reset']) if @remotes.all.empty?
+      cmd.run(args + ['reset']) if @remotes.all.empty? && @opts['network'] != 'test'
       @stats.exec('update') do
         cmd.run(args + ['update'])
       end
       cmd.run(args + ['select'])
+      raise 'There are no remote nodes left' if @remotes.all.empty?
       @log.info("List of remotes updated in #{Zold::Age.new(start)}, #{@remotes.all.count} nodes in the list")
     end
 
@@ -80,7 +81,7 @@ module Zold::Stress
         end
       end
       @log.info("There are #{@wallets.all.count} wallets in the pool \
-with #{@wallets.all.map { |id| @wallets.find(id, &:balance) }.inject(&:+)} \
+with #{@wallets.all.map { |id| @wallets.find(id, &:balance) }.inject(&:+)} total, \
 in #{Zold::Age.new(start)}")
     end
 
@@ -104,8 +105,8 @@ in #{Zold::Age.new(start)}")
         end
       end
       @log.info("#{sent.count} payments sent from #{sources.count} wallets, \
-in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air:
-  #{sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n  ")}")
+in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air")
+      @log.debug("  #{sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n  ")}")
     end
 
     def pull
@@ -129,16 +130,18 @@ after the pull of #{targets.count} in #{Zold::Age.new(start)}")
     end
 
     def match
+      total = 0
       @air.fetch.each do |p|
         next unless @wallets.find(p[:target], &:exists?)
         t = @wallets.find(p[:target], &:txns).find { |x| x.details == p[:details] && x.bnf == p[:source] }
         next if t.nil?
         @stats.put('arrived', Time.now - p[:start])
-        @log.info("#{p[:amount]} arrived from #{p[:source]} to #{p[:target]} \
+        total += 1
+        @log.debug("#{p[:amount]} arrived from #{p[:source]} to #{p[:target]} \
 in txn ##{t.id} in #{Zold::Age.new(p[:start])}: #{t.details}")
         @air.delete(p)
       end
-      @log.info("#{@air.fetch.count} payments are still in the air")
+      @log.info("#{total} payments just arrived, #{@air.fetch.count} still in the air")
     end
   end
 end
