@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+require 'securerandom'
 require 'zold/key'
 require 'zold/tax'
 require 'zold/commands/pay'

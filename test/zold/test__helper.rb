@@ -32,6 +32,7 @@ ENV['RACK_ENV'] = 'test'
 # end
 
 require 'concurrent'
+require 'slop'
 require 'minitest/autorun'
 module Minitest
   class Test
