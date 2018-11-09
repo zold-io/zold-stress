@@ -109,7 +109,7 @@ Available options:"
   end
   copies = File.join(zoldata, 'copies')
 
-  stats = Zold::Stress::Stats.new
+  stats = Zold::Stress::Stats.new(opts['batch'])
   air = Zold::Stress::Air.new
   round = Zold::Stress::Round.new(
     pvt: Zold::Key.new(file: opts['private-key']),

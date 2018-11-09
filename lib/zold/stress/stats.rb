@@ -33,20 +33,20 @@ require 'zold/age'
 module Zold::Stress
   # Stats
   class Stats
-    def initialize
-      @start = Time.now
+    def initialize(batch = 0)
+      @batch = batch
       @history = {}
       @mutex = Mutex.new
     end
 
     def tps
-      total('arrived') / (Time.now - @start)
+      @batch / avg('arrived')
     end
 
     def to_console
       [
         "#{tps.round(2)} tps",
-        %w[update push pull paid].map do |m|
+        %w[update push pull paid arrived].map do |m|
           if @history[m]
             t = "#{m}: #{total(m)}/#{Zold::Age.new(Time.now - avg(m), limit: 1)}"
             errors = total(m + '_error')

@@ -38,13 +38,19 @@ module Zold::Stress
 
     def add(pmt)
       @mutex.synchronize do
-        @all << pmt
+        @all << pmt.merge(pushed: Time.now)
       end
     end
 
     def delete(pmt)
       @mutex.synchronize do
         @all.delete(pmt)
+      end
+    end
+
+    def pulled(id)
+      @mutex.synchronize do
+        @all.select { |a| a[:target] == id }.each { |a| a[:pulled] = Time.now }
       end
     end
   end

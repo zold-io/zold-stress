@@ -124,6 +124,7 @@ in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air")
             ['pull', id.to_s, "--network=#{@opts['network']}"] + @opts.arguments
           )
         end
+        @air.pulled(id)
       end
       @log.info("There are #{@wallets.all.count} wallets left, \
 after the pull of #{targets.count} in #{Zold::Age.new(start)}")
@@ -135,7 +136,7 @@ after the pull of #{targets.count} in #{Zold::Age.new(start)}")
         next unless @wallets.find(p[:target], &:exists?)
         t = @wallets.find(p[:target], &:txns).find { |x| x.details == p[:details] && x.bnf == p[:source] }
         next if t.nil?
-        @stats.put('arrived', Time.now - p[:start])
+        @stats.put('arrived', p[:pulled] - p[:pushed])
         total += 1
         @log.debug("#{p[:amount]} arrived from #{p[:source]} to #{p[:target]} \
 in txn ##{t.id} in #{Zold::Age.new(p[:start])}: #{t.details}")
