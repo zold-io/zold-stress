@@ -37,7 +37,7 @@ module Minitest
   class Test
     def test_log
       require 'zold/log'
-      @test_log ||= Zold::Log::Sync.new(Zold::Log::Verbose.new)
+      @test_log ||= Zold::Log::Sync.new(ENV['TEST_QUIET_LOG'] ? Zold::Log::Quiet.new : Zold::Log::Verbose.new)
     end
 
     def test_opts(*argv)
