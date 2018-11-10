@@ -5,8 +5,8 @@ install: |-
   export GEM_PATH=$GEM_HOME:$GEM_PATH
 release:
   script: |-
-    rvm repair wrappers
     bundle install
+    sudo rvm repair wrappers
     rake --quiet
     rm -rf *.gem
     sed -i "s/0\.0\.0/${tag}/g" zold-stress.gemspec
