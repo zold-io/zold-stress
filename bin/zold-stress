@@ -32,6 +32,7 @@ require 'zold/wallets'
 require 'zold/sync_wallets'
 require 'zold/cached_wallets'
 require 'zold/remotes'
+require 'zold/commands/list'
 require_relative '../lib/zold/stress/round'
 require_relative '../lib/zold/stress/stats'
 require_relative '../lib/zold/stress/summary'
@@ -122,11 +123,12 @@ Available options:"
   start = Time.now
   round.update
   round.prepare
-  opts['rounds'].times do
+  opts['rounds'].times do |r|
     round.send
     round.pull
     round.match
     log.info(summary)
+    Zold::List.new(wallets: wallets, log: log).run(['list'] + opts.arguments) if (r % 10).zero?
   end
   s = Time.now
   loop do

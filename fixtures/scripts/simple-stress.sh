@@ -15,6 +15,8 @@ function start_node {
   echo ${port}
 }
 
+zold --version
+
 port=$(start_node)
 trap "halt_nodes ${port}" EXIT
 zold remote clean
@@ -26,5 +28,5 @@ zold pay --private-key=id_rsa 0000000000000000 abcdabcdabcdabcd 4.95 'To test'
 zold push 0000000000000000
 zold remove 0000000000000000
 
-# zold-stress --rounds=1000 --wait=5 --threads=12 --pool=8 --batch=32 --private-key=id_rsa
+# zold-stress --rounds=1000 --wait=5 --threads=12 --pool=16 --batch=8 --private-key=id_rsa
 zold-stress --rounds=4 --wait=5 --threads=4 --pool=4 --batch=4 --private-key=id_rsa
