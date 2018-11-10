@@ -7,6 +7,7 @@ release:
   script: |-
     bundle install
     sudo rvm repair wrappers
+    zold --version
     rake --quiet
     rm -rf *.gem
     sed -i "s/0\.0\.0/${tag}/g" zold-stress.gemspec
