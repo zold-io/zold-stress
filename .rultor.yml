@@ -5,6 +5,7 @@ install: |-
   export GEM_PATH=$GEM_HOME:$GEM_PATH
 release:
   script: |-
+    rvm repair wrappers
     bundle install
     rake --quiet
     rm -rf *.gem
