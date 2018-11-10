@@ -7,6 +7,7 @@ release:
   script: |-
     bundle install
     sudo rvm repair wrappers
+    gem install zold
     zold --version
     rake --quiet
     rm -rf *.gem
