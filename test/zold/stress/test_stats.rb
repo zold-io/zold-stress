@@ -33,4 +33,13 @@ class StatsTest < Minitest::Test
     assert(stats.to_json[m])
     assert_equal(1.55, stats.to_json[m][:avg])
   end
+
+  def test_works_with_empty
+    stats = Zold::Stress::Stats.new
+    m = 'metric-2'
+    assert(!stats.exists?(m))
+    assert_equal(0, stats.sum(m))
+    assert_equal(0, stats.avg(m))
+    assert_equal(0, stats.total(m))
+  end
 end

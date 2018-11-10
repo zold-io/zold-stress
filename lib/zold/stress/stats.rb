@@ -51,8 +51,7 @@ module Zold::Stress
     end
 
     def sum(metric)
-      array = @history[metric].map { |a| a[:value] } || []
-      array.inject(&:+) || 0
+      (@history[metric] || []).map { |a| a[:value] }.inject(&:+) || 0
     end
 
     def to_json
