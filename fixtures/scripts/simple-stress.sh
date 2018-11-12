@@ -15,8 +15,6 @@ function start_node {
   echo ${port}
 }
 
-zold --version
-
 port=$(start_node)
 trap "halt_nodes ${port}" EXIT
 zold remote clean

@@ -20,7 +20,7 @@ function wait_for_url {
       echo "URL $1 is not available after ${i} attempts"
       exit 12
     fi
-    sleep 2
+    sleep 1
   done
 }
 
@@ -32,7 +32,7 @@ function wait_for_port {
       echo "Port $1 is not available after ${i} attempts"
       exit 13
     fi
-    sleep 2
+    sleep 1
   done
 }
 
@@ -48,7 +48,7 @@ function halt_nodes {
           exit 15
         fi
         echo "Still waiting for process ${pid} to die, attempt no.${i}"
-        sleep 2
+        sleep 1
       done
       echo "Process ${pid} is dead!"
     fi

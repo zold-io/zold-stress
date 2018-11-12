@@ -33,7 +33,7 @@ require_relative '../test__helper'
 # License:: MIT
 class TestBin < Minitest::Test
   Dir.new('fixtures/scripts').select { |f| f =~ /\.sh$/ && !f.start_with?('_') }.each do |f|
-    define_method("test_script_#{f.gsub(/[^a-z]/, '_')}") do
+    define_method("test_#{f.gsub(/\.sh$/, '').gsub(/[^a-z]/, '_')}") do
       start = Time.now
       test_log.debug("\n\n#{f} running...")
       Dir.mktmpdir do |dir|

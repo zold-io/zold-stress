@@ -69,17 +69,14 @@ class PmntsTest < Minitest::Test
     Dir.mktmpdir do |home|
       wallets = Zold::Wallets.new(home)
       remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
-      Zold::Create.new(wallets: wallets, log: test_log).run(
-        ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
-      )
       ids = []
-      5.times do
+      6.times do
         id = Zold::Create.new(wallets: wallets, log: test_log).run(
-          ['create', '--public-key=fixtures/id_rsa.pub', '--network=test']
+          ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id.new.to_s, '--network=test']
         )
-        Zold::Pay.new(wallets: wallets, remotes: remotes, log: test_log).run(
-          ['pay', Zold::Id::ROOT.to_s, id.to_s, '7.00', 'start', '--private-key=fixtures/id_rsa']
-        )
+        wallets.find(id) do |w|
+          w.add(Zold::Txn.new(1, Time.now, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))
+        end
         ids << id
       end
       sent = Zold::Stress::Pmnts.new(
@@ -91,6 +88,7 @@ class PmntsTest < Minitest::Test
         log: test_log, vlog: test_log
       ).send
       assert_equal(20, sent.count)
+      assert_equal(46, wallets.all.map { |id| wallets.find(id) { |w| w.txns.count } }.inject(&:+))
       assert_equal(ids.sort, sent.map { |s| s[:source] }.sort.uniq)
     end
   end
