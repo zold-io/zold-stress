@@ -36,7 +36,6 @@ require 'zold/commands/pay'
 require 'zold/commands/push'
 require 'zold/commands/node'
 require 'tmpdir'
-require 'memory_profiler'
 require_relative '../test__helper'
 require_relative 'fake_node'
 require_relative '../../../lib/zold/stress/round'
@@ -70,24 +69,21 @@ class StressTest < Minitest::Test
           copies: File.join(home, 'copies'),
           log: test_log, vlog: test_log
         )
-        report = MemoryProfiler.report(top: 10) do
-          round.update
-          round.prepare
-          round.send
-          attempt = 0
-          loop do
-            break if air.fetch.empty?
-            break if attempt > 50
-            round.pull
-            round.match
-            test_log.info(summary)
-            attempt += 1
-            sleep 0.2
-          end
-          assert(air.fetch.empty?)
-          assert_equal(batch, stats.total('arrived'))
+        round.update
+        round.prepare
+        round.send
+        attempt = 0
+        loop do
+          break if air.fetch.empty?
+          break if attempt > 50
+          round.pull
+          round.match
+          test_log.info(summary)
+          attempt += 1
+          sleep 0.2
         end
-        # report.pretty_print
+        assert(air.fetch.empty?)
+        assert_equal(batch, stats.total('arrived'))
       end
     end
   end
