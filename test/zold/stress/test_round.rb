@@ -87,7 +87,7 @@ class StressTest < Minitest::Test
           assert(air.fetch.empty?)
           assert_equal(batch, stats.total('arrived'))
         end
-        report.pretty_print
+        # report.pretty_print
       end
     end
   end
