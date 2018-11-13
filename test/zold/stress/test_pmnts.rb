@@ -89,7 +89,6 @@ class PmntsTest < Minitest::Test
       ).send
       assert_equal(20, sent.count)
       assert_equal(46, wallets.all.map { |id| wallets.find(id) { |w| w.txns.count } }.inject(&:+))
-      assert_equal(ids.sort, sent.map { |s| s[:source] }.sort.uniq)
     end
   end
 end
