@@ -25,6 +25,7 @@ STDOUT.sync = true
 
 require 'slop'
 require 'rainbow'
+require 'concurrent'
 require 'zold/log'
 require 'zold/age'
 require 'zold/wallet'
@@ -119,6 +120,15 @@ Available options:"
     wallets: wallets, remotes: remotes, copies: copies,
     stats: stats, air: air, log: log, vlog: vlog, opts: opts
   )
+
+  log.info("Zold version: #{Zold::VERSION}")
+  log.info("Time: #{Time.now.utc.iso8601}; CPUs: #{Concurrent.processor_count}")
+  log.info("Home directory: #{home}")
+  log.info("Ruby version: #{RUBY_VERSION}/#{RUBY_PLATFORM}")
+  log.info("Zold gem version: #{Zold::VERSION}")
+  log.info("Zold protocol version: #{Zold::PROTOCOL}")
+  log.info("Network ID: #{opts['network']}")
+  log.info("Rounds: #{opts['rounds']}, threads: #{opts['threads']}, pool: #{opts['pool']}, batch: #{opts['batch']}")
 
   start = Time.now
   round.update
