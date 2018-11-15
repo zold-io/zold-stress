@@ -1,6 +1,8 @@
 assets:
   rubygems.yml: zerocracy/home#assets/rubygems.yml
 install: |-
+  sudo apt-get -y update
+  sudo apt-get -y install libcurl4-openssl-dev
   sudo gem install zold
   zold --version
   export GEM_HOME=~/.ruby
