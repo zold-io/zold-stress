@@ -61,8 +61,8 @@ class PmntsTest < Minitest::Test
       assert_equal(1, sent.count)
       assert_equal(id, sent[0][:source])
       assert_equal(Zold::Id::ROOT, sent[0][:target])
-      assert_equal(Zold::Amount.new(zld: 3.5), wallets.find(id, &:balance))
-      assert_equal(Zold::Amount.new(zld: -3.5), wallets.find(Zold::Id::ROOT, &:balance))
+      assert_equal(Zold::Amount.new(zld: 3.5), wallets.acq(id, &:balance))
+      assert_equal(Zold::Amount.new(zld: -3.5), wallets.acq(Zold::Id::ROOT, &:balance))
     end
   end
 
@@ -75,7 +75,7 @@ class PmntsTest < Minitest::Test
         id = Zold::Create.new(wallets: wallets, log: test_log).run(
           ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id.new.to_s, '--network=test']
         )
-        wallets.find(id) do |w|
+        wallets.acq(id) do |w|
           w.add(Zold::Txn.new(1, Time.now, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))
         end
         ids << id
@@ -89,7 +89,7 @@ class PmntsTest < Minitest::Test
         log: test_log, vlog: test_log
       ).send
       assert_equal(20, sent.count)
-      assert_equal(46, wallets.all.map { |id| wallets.find(id) { |w| w.txns.count } }.inject(&:+))
+      assert_equal(46, wallets.all.map { |id| wallets.acq(id) { |w| w.txns.count } }.inject(&:+))
     end
   end
 end

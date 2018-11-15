@@ -55,7 +55,7 @@ class StressTest < Minitest::Test
         Zold::Create.new(wallets: wallets, log: test_log).run(
           ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
         )
-        wallets.find(Zold::Id::ROOT) do |w|
+        wallets.acq(Zold::Id::ROOT) do |w|
           w.add(Zold::Txn.new(1, Time.now, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))
         end
         stats = Zold::Stress::Stats.new

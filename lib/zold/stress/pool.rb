@@ -51,7 +51,7 @@ module Zold::Stress
     def rebuild
       raise "There are no wallets in the pool at #{@wallets.path}, at least one is needed" if @wallets.all.empty?
       balances = @wallets.all
-        .map { |id| { id: id, balance: @wallets.find(id, &:balance) } }
+        .map { |id| { id: id, balance: @wallets.acq(id, &:balance) } }
         .sort_by { |h| h[:balance] }
         .reverse
       balances.last([balances.count - @opts['pool'], 0].max).each do |h|
@@ -60,7 +60,7 @@ module Zold::Stress
         )
       end
       Tempfile.open do |f|
-        File.write(f, @wallets.find(balances[0][:id], &:key).to_s)
+        File.write(f, @wallets.acq(balances[0][:id], &:key).to_s)
         while @wallets.all.count < @opts['pool']
           Zold::Create.new(wallets: @wallets, log: @vlog).run(
             ['create', "--public-key=#{f.path}", "--network=#{@opts['network']}"] + @opts.arguments

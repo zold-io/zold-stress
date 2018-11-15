@@ -54,7 +54,7 @@ module Zold::Stress
         File.write(f, @pvt.to_s)
         loop do
           source = all.sample
-          balance = @wallets.find(source, &:balance)
+          balance = @wallets.acq(source, &:balance)
           next if balance.negative? || balance.zero?
           amount = balance / all.count
           next if amount < Zold::Amount.new(zld: 0.0001)
@@ -79,7 +79,7 @@ module Zold::Stress
           "--private-key=#{pvt}", '--ignore-nodes-absence'
         ]
       )
-      if @wallets.find(source) { |w| Zold::Tax.new(w).in_debt? }
+      if @wallets.acq(source) { |w| Zold::Tax.new(w).in_debt? }
         @log.error("The wallet #{source} is in debt and we can't pay taxes")
         return
       end

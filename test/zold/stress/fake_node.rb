@@ -72,8 +72,8 @@ module Zold::Stress
           end
           attempt = 0
           loop do
-            code = Zold::Http.new(uri: "http://localhost:#{port}/").get.code
-            break if code == '200'
+            code = Zold::Http.new(uri: "http://localhost:#{port}/").get.status
+            break if code == 200
             @log.debug("Waiting for the node at localhost:#{port} (attempt no.#{attempt}): #{code}...")
             attempt += 1
             sleep 1

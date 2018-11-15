@@ -121,7 +121,6 @@ Available options:"
     stats: stats, air: air, log: log, vlog: vlog, opts: opts
   )
 
-  log.info("Zold version: #{Zold::VERSION}")
   log.info("Time: #{Time.now.utc.iso8601}; CPUs: #{Concurrent.processor_count}")
   log.info("Home directory: #{home}")
   log.info("Ruby version: #{RUBY_VERSION}/#{RUBY_PLATFORM}")

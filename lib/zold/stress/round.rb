@@ -81,7 +81,7 @@ module Zold::Stress
         end
       end
       @log.info("There are #{@wallets.all.count} wallets in the pool \
-with #{@wallets.all.map { |id| @wallets.find(id, &:balance) }.inject(&:+)} total, \
+with #{@wallets.all.map { |id| @wallets.acq(id, &:balance) }.inject(&:+)} total, \
 in #{Zold::Age.new(start)}")
     end
 
@@ -102,7 +102,7 @@ in #{Zold::Age.new(start)}")
           mutex.synchronize do
             a[1].each { |p| @air.add(p) }
           end
-          @stats.put('output', @wallets.find(a[0], &:size))
+          @stats.put('output', @wallets.acq(a[0], &:size))
         end
       end
       @log.info("#{sent.count} payments for #{sent.map { |s| s[:amount] }.inject(&:+)} \
@@ -122,7 +122,7 @@ in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air, \
           )
         end
         @air.pulled(id)
-        @stats.put('input', @wallets.find(id, &:size))
+        @stats.put('input', @wallets.acq(id, &:size))
       end
       @log.info("There are #{@wallets.all.count} wallets left, \
 after the pull of #{targets.count} in #{Zold::Age.new(start)}")
@@ -131,8 +131,8 @@ after the pull of #{targets.count} in #{Zold::Age.new(start)}")
     def match
       total = 0
       @air.fetch.each do |p|
-        next unless @wallets.find(p[:target], &:exists?)
-        t = @wallets.find(p[:target], &:txns).find { |x| x.details == p[:details] && x.bnf == p[:source] }
+        next unless @wallets.acq(p[:target], &:exists?)
+        t = @wallets.acq(p[:target], &:txns).find { |x| x.details == p[:details] && x.bnf == p[:source] }
         next if t.nil?
         @stats.put('arrived', p[:pulled] - p[:pushed])
         total += 1

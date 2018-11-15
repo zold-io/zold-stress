@@ -48,7 +48,7 @@ module Zold::Stress
         "#{tps.round(2)} tps",
         %w[update push pull paid arrived].map do |m|
           if @stats.exists?(m)
-            t = "#{m}: #{@stats.total(m)}/#{Zold::Age.new(Time.now - @stats.avg(m), limit: 1)}"
+            t = "#{m}: #{@stats.total(m)}/#{Zold::Age.new(Time.now - @stats.avg(m), limit: 2)}"
             errors = @stats.total(m + '_error')
             t += errors.zero? ? '' : '/' + Rainbow(errors.to_s).red
             t
