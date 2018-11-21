@@ -8,6 +8,8 @@ export RUBYOPT="-W0"
 alias zold="zold --network=test"
 alias zold-stress="$1 --network=test"
 
+zold --version
+
 function reserve_port {
   python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()'
 }

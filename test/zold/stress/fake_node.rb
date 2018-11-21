@@ -44,6 +44,7 @@ module Zold::Stress
       RandomPort::Pool::SINGLETON.acquire do |port|
         Dir.mktmpdir do |home|
           thread = Thread.start do
+            Thread.current.name = 'fake_node'
             Zold::VerboseThread.new(@log).run do
               node = Zold::Node.new(
                 wallets: Zold::Wallets.new(home),

@@ -20,8 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-STDOUT.sync = true
-
 ENV['RACK_ENV'] = 'test'
 
 # require 'simplecov'
@@ -38,7 +36,7 @@ module Minitest
   class Test
     def test_log
       require 'zold/log'
-      @test_log ||= Zold::Log::Sync.new(ENV['TEST_QUIET_LOG'] ? Zold::Log::Quiet.new : Zold::Log::Verbose.new)
+      @test_log ||= ENV['TEST_QUIET_LOG'] ? Zold::Log::NULL : Zold::Log::VERBOSE
     end
 
     def test_opts(*argv)

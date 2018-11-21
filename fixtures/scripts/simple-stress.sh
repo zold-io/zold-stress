@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function start_node {
-  port=$(reserve_port)
+  port=$1
   mkdir ${port}
   cd ${port}
   zold node --trace --invoice=SPREADWALLETS@ffffffffffffffff \
@@ -12,10 +12,10 @@ function start_node {
   echo ${pid} > pid
   cd ..
   wait_for_url http://localhost:${port}/
-  echo ${port}
 }
 
-port=$(start_node)
+port=$(reserve_port)
+$(start_node $port)
 trap "halt_nodes ${port}" EXIT
 zold remote clean
 zold remote add localhost ${port}
@@ -26,5 +26,5 @@ zold pay --private-key=id_rsa 0000000000000000 abcdabcdabcdabcd 4.95 'To test'
 zold push 0000000000000000
 zold remove 0000000000000000
 
-# zold-stress --rounds=1000 --wait=5 --threads=12 --pool=16 --batch=8 --private-key=id_rsa
-zold-stress --rounds=4 --wait=5 --threads=4 --pool=4 --batch=4 --private-key=id_rsa
+zold-stress --rounds=4 --wait=5 --threads=16 --pool=16 --batch=8 --private-key=id_rsa --verbose
+# zold-stress --rounds=4 --wait=5 --threads=4 --pool=4 --batch=4 --private-key=id_rsa

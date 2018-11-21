@@ -39,7 +39,7 @@ module Zold::Stress
   # Full round of stress test
   class Round
     def initialize(pvt:, wallets:, remotes:, copies:,
-      stats:, air:, opts:, log: Zold::Log::Quiet.new, vlog: Zold::Log::Quiet.new)
+      stats:, air:, opts:, log: Zold::Log::NULL, vlog: Zold::Log::NULL)
       @pvt = pvt
       @wallets = wallets
       @remotes = remotes
@@ -74,6 +74,7 @@ module Zold::Stress
       )
       pool.rebuild
       @wallets.all.peach(@opts['threads']) do |id|
+        Thread.current.name = 'prepare-push'
         @stats.exec('push') do
           Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
             ['push', id.to_s, "--network=#{@opts['network']}"] + @opts.arguments
@@ -95,6 +96,7 @@ in #{Zold::Age.new(start)}")
       mutex = Mutex.new
       sources = sent.group_by { |p| p[:source] }
       sources.peach(@opts['threads']) do |a|
+        Thread.current.name = 'send-push'
         @stats.exec('push') do
           Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
             ['push', a[0].to_s, "--network=#{@opts['network']}"] + @opts.arguments
@@ -109,16 +111,17 @@ in #{Zold::Age.new(start)}")
 sent from #{sources.count} wallets, \
 in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air, \
 #{Zold::Age.new(@air.fetch.map { |a| a[:pushed] }.reverse[0] || Time.now)} is the oldest")
-      @log.debug("  #{sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n  ")}")
+      @log.debug("#{sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n")}")
     end
 
     def pull
       start = Time.now
       targets = @air.fetch.group_by { |p| p[:target] }.map { |a| a[0] }
       targets.peach(@opts['threads']) do |id|
+        Thread.current.name = "pull-#{id}"
         @stats.exec('pull') do
           Zold::Pull.new(wallets: @wallets, remotes: @remotes, copies: @copies, log: @vlog).run(
-            ['pull', id.to_s, "--network=#{@opts['network']}"] + @opts.arguments
+            ['pull', id.to_s, "--network=#{@opts['network']}", '--skip-propagate'] + @opts.arguments
           )
         end
         @air.pulled(id)
@@ -134,11 +137,11 @@ after the pull of #{targets.count} in #{Zold::Age.new(start)}")
         next unless @wallets.acq(p[:target], &:exists?)
         t = @wallets.acq(p[:target], &:txns).find { |x| x.details == p[:details] && x.bnf == p[:source] }
         next if t.nil?
+        @air.arrived(p)
         @stats.put('arrived', p[:pulled] - p[:pushed])
         total += 1
         @log.debug("#{p[:amount]} arrived from #{p[:source]} to #{p[:target]} \
 in txn ##{t.id} in #{Zold::Age.new(p[:start])}: #{t.details}")
-        @air.delete(p)
       end
       @log.info("#{total} payments just arrived, #{@air.fetch.count} still in the air")
     end

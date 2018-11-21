@@ -36,7 +36,7 @@ module Zold::Stress
   # Payments to send in a batch.
   class Pmnts
     def initialize(pvt:, wallets:, remotes:, stats:, opts:,
-      vlog: Zold::Log::Quiet.new, log: Zold::Log::Quiet.new)
+      vlog: Zold::Log::NULL, log: Zold::Log::NULL)
       @pvt = pvt
       @wallets = wallets
       @remotes = remotes

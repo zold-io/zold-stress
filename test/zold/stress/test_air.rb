@@ -36,7 +36,22 @@ class AirTest < Minitest::Test
     air.fetch.each do |p|
       assert_equal(pmt[:details], p[:details])
     end
-    air.delete(air.fetch[0])
+    air.pulled(air.fetch[0][:target])
+    assert_equal(1, air.fetch.count)
+    air.arrived(air.fetch[0])
     assert_equal(0, air.fetch.count)
+  end
+
+  def test_adds_and_removes_many
+    air = Zold::Stress::Air.new
+    5.times do |i|
+      pmt = { start: Time.now, source: Zold::Id::ROOT, target: Zold::Id::ROOT, details: i.to_s }
+      air.add(pmt)
+      assert_equal(i + 1, air.fetch.count)
+    end
+    air.pulled(air.fetch[0][:target])
+    assert_equal(5, air.fetch.count)
+    air.arrived(air.fetch[0])
+    assert_equal(4, air.fetch.count)
   end
 end

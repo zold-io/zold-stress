@@ -32,25 +32,30 @@ module Zold::Stress
       @all = []
     end
 
-    def fetch
-      @all
+    def fetch(any = false)
+      @all.select { |p| any || p[:arrived].nil? }
     end
 
     def add(pmt)
       @mutex.synchronize do
+        if @all.find { |p| p[:details] == pmt[:details] }
+          raise "Payment already exists (#{@all.size} total): #{pmt}"
+        end
         @all << pmt.merge(pushed: Time.now)
-      end
-    end
-
-    def delete(pmt)
-      @mutex.synchronize do
-        @all.delete(pmt)
       end
     end
 
     def pulled(id)
       @mutex.synchronize do
         @all.select { |a| a[:target] == id }.each { |a| a[:pulled] = Time.now }
+      end
+    end
+
+    def arrived(pmt)
+      @mutex.synchronize do
+        p = @all.find { |p| p[:details] == pmt[:details] }
+        raise "Payment doesn't exist (#{@all.size} total): #{pmt}" if p.nil?
+        p[:arrived] = Time.now
       end
     end
   end

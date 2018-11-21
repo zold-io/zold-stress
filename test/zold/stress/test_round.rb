@@ -46,7 +46,7 @@ require_relative '../../../lib/zold/stress/air'
 
 class StressTest < Minitest::Test
   def test_runs_a_few_full_cycles
-    Zold::Stress::FakeNode.new(Zold::Log::Quiet.new).exec do |port|
+    Zold::Stress::FakeNode.new(Zold::Log::NULL).exec do |port|
       Dir.mktmpdir do |home|
         remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
         remotes.clean

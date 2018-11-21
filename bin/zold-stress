@@ -44,8 +44,8 @@ Thread.current.name = 'main'
 Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 
-log = Zold::Log::Regular.new
-vlog = Zold::Log::Quiet.new
+log = Zold::Log::REGULAR
+vlog = Zold::Log::NULL
 
 begin
   opts = Slop.parse(ARGV, strict: false, suppress_errors: true) do |o|
@@ -74,21 +74,18 @@ Available options:"
       "Home directory (default: #{Dir.pwd})",
       default: Dir.pwd
     o.string '--network',
-      "The name of the network we work in (default: #{Zold::Wallet::MAIN_NETWORK}",
+      "The name of the network we work in (default: #{Zold::Wallet::MAINET}",
       required: true,
-      default: Zold::Wallet::MAIN_NETWORK
+      default: Zold::Wallet::MAINET
     o.bool '-h', '--help', 'Show these instructions'
     o.on '--verbose', 'Enable extra logging information' do
-      log = Zold::Log::Verbose.new
-      vlog = Zold::Log::Regular.new
+      log = Zold::Log::VERBOSE
+      vlog = Zold::Log::ERRORS
     end
     o.on '--no-colors', 'Disable colors in the ouput' do
       Rainbow.enabled = false
     end
   end
-
-  log = Zold::Log::Sync.new(log)
-  vlog = Zold::Log::Sync.new(vlog)
 
   if opts.help?
     log.info(opts.to_s)
@@ -137,7 +134,7 @@ Available options:"
     round.pull
     round.match
     log.info(summary)
-    Zold::List.new(wallets: wallets, log: log).run(['list'] + opts.arguments) if (r % 10).zero?
+    Zold::List.new(wallets: wallets, copies: copies, log: log).run(['list'] + opts.arguments) if (r % 10).zero?
   end
   s = Time.now
   loop do
@@ -148,6 +145,9 @@ Available options:"
     log.info(summary)
   end
   unless air.fetch.empty?
+    air.fetch.each do |p|
+      log.info("  #{p[:source]} -> #{p[:target]} #{p[:amount]} #{Zold::Age.new(p[:pushed])}")
+    end
     raise "#{air.fetch.count} payments out of #{stats.total('paid')} are still somewhere, we lost them :("
   end
   log.info("Successfully sent and received #{Rainbow(stats.total('arrived')).green} transactions \

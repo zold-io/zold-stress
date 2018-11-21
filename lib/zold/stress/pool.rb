@@ -38,7 +38,7 @@ module Zold::Stress
   # Pool of wallets.
   class Pool
     def initialize(wallets:, remotes:, copies:, stats:, opts:,
-      log: Zold::Log::Quiet.new, vlog: Zold::Log::Quiet.new)
+      log: Zold::Log::NULL, vlog: Zold::Log::NULL)
       @wallets = wallets
       @remotes = remotes
       @copies = copies
