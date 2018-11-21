@@ -14,7 +14,10 @@ function start_node {
   echo ${port}
 }
 
-nodes=($(start_node) $(start_node) $(start_node) $(start_node))
+nodes=()
+nodes+=($(start_node))
+nodes+=($(start_node))
+
 trap "halt_nodes ${nodes[*]}" EXIT
 for port in ${nodes[@]}; do
   cd ${port}
