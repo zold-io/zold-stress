@@ -40,9 +40,10 @@ Gem::Specification.new do |s|
   s.rdoc_options = ['--charset=UTF-8']
   s.extra_rdoc_files = ['README.md', 'LICENSE.txt']
   s.add_runtime_dependency 'backtrace', '0.3.0'
-  s.add_runtime_dependency 'concurrent-ruby', '1.1.2'
+  s.add_runtime_dependency 'concurrent-ruby', '1.1.3'
   s.add_runtime_dependency 'parallelize', '0.4.1'
-  s.add_runtime_dependency 'zold'
+  s.add_runtime_dependency 'slop', '4.6.2'
+  s.add_runtime_dependency 'zold', '0.16.29'
   s.add_development_dependency 'codecov', '0.1.13'
   s.add_development_dependency 'minitest', '5.11.3'
   s.add_development_dependency 'random-port', '0.3.0'
