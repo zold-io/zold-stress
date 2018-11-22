@@ -33,9 +33,10 @@ require 'zold/age'
 module Zold::Stress
   # Stats
   class Stats
-    def initialize
+    def initialize(log: Zold::Log::NULL)
       @history = {}
       @mutex = Mutex.new
+      @log = log
     end
 
     def exists?(metric)
@@ -78,6 +79,7 @@ module Zold::Stress
       put(metric + '_ok', Time.now - start)
     rescue StandardError => ex
       put(metric + '_error', Time.now - start)
+      @log.error(Backtrace.new(ex))
       raise ex unless swallow
     ensure
       put(metric, Time.now - start)

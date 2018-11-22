@@ -26,6 +26,7 @@ require 'zold/key'
 require 'zold/id'
 require 'zold/commands/push'
 require 'zold/commands/remote'
+require 'zold/commands/list'
 require_relative 'stats'
 require_relative 'pool'
 require_relative 'pmnts'
@@ -49,6 +50,10 @@ module Zold::Stress
       @stats = stats
       @air = air
       @vlog = vlog
+    end
+
+    def list
+      Zold::List.new(wallets: @wallets, copies: @copies, log: @log).run(['list'] + @opts.arguments)
     end
 
     def update
