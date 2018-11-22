@@ -38,9 +38,7 @@ module Zold::Stress
 
     def add(pmt)
       @mutex.synchronize do
-        if @all.find { |p| p[:details] == pmt[:details] }
-          raise "Payment already exists (#{@all.size} total): #{pmt}"
-        end
+        raise "Payment already exists (#{@all.size} total): #{pmt}" if @all.find { |p| p[:details] == pmt[:details] }
         @all << pmt.merge(pushed: Time.now)
       end
     end
@@ -53,9 +51,9 @@ module Zold::Stress
 
     def arrived(pmt)
       @mutex.synchronize do
-        p = @all.find { |p| p[:details] == pmt[:details] }
-        raise "Payment doesn't exist (#{@all.size} total): #{pmt}" if p.nil?
-        p[:arrived] = Time.now
+        found = @all.find { |p| p[:details] == pmt[:details] }
+        raise "Payment doesn't exist (#{@all.size} total): #{pmt}" if found.nil?
+        found[:arrived] = Time.now
       end
     end
   end

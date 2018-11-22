@@ -116,7 +116,7 @@ in #{Zold::Age.new(start)}")
 sent from #{sources.count} wallets, \
 in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air, \
 #{Zold::Age.new(@air.fetch.map { |a| a[:pushed] }.reverse[0] || Time.now)} is the oldest")
-      @log.debug("#{sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n")}")
+      @log.debug(sent.map { |p| "#{p[:source]} -> #{p[:target]} #{p[:amount]}" }.join("\n"))
     end
 
     def pull
