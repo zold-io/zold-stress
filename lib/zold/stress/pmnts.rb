@@ -76,7 +76,7 @@ module Zold::Stress
       Zold::Taxes.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
         [
           'taxes', 'pay', source.to_s, "--network=#{@opts['network']}",
-          "--private-key=#{pvt}", '--ignore-nodes-absence'
+          "--private-key=#{pvt}", '--ignore-nodes-absence', '--skip-propagate'
         ]
       )
       if @wallets.acq(source) { |w| Zold::Tax.new(w).in_debt? }

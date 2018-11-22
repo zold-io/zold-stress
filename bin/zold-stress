@@ -77,6 +77,7 @@ Available options:"
       "The name of the network we work in (default: #{Zold::Wallet::MAINET}",
       required: true,
       default: Zold::Wallet::MAINET
+    o.bool '--skip-update', 'Don\'t update the list of remote nodes'
     o.bool '-h', '--help', 'Show these instructions'
     o.on '--verbose', 'Enable extra logging information' do
       log = Zold::Log::VERBOSE
@@ -127,9 +128,10 @@ Available options:"
   log.info("Rounds: #{opts['rounds']}, threads: #{opts['threads']}, pool: #{opts['pool']}, batch: #{opts['batch']}")
 
   start = Time.now
-  round.update
+  round.update unless opts['skip-update']
   round.prepare
   opts['rounds'].times do |r|
+    round.update unless opts['skip-update']
     round.send
     round.pull
     round.match

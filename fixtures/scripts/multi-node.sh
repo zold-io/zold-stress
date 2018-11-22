@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# rm -rf /code/temp/stress/*
+# cp id_rsa* /code/temp/stress
+# cd /code/temp/stress
+
 function start_node {
   port=$1
   mkdir ${port}
@@ -29,7 +33,7 @@ for port in ${nodes[@]}; do
     cd ${port}
     for friend in ${nodes[@]}; do
       if [ "${port}" != "${friend}" ]; then
-        zold remote add localhost ${friend}
+        zold remote add localhost ${friend} --skip-ping
       fi
     done
     cd ..
@@ -39,7 +43,7 @@ wait
 
 zold remote clean
 for port in ${nodes[@]}; do
-  zold remote add localhost ${port} &
+  zold remote add localhost ${port} --skip-ping &
 done
 wait
 
@@ -49,5 +53,7 @@ zold pay --private-key=id_rsa 0000000000000000 abcdabcdabcdabcd 4.95 'To test'
 zold push 0000000000000000 --ignore-score-weakness
 zold remove 0000000000000000
 
-# zold-stress --rounds=32 --wait=10 --threads=8 --pool=8 --batch=16 --private-key=id_rsa --ignore-score-weakness
-zold-stress --rounds=4 --wait=10 --threads=${#nodes[@]} --pool=8 --batch=8 --private-key=id_rsa --ignore-score-weakness
+# sleep 10000
+
+zold-stress --rounds=4 --wait=10 --threads=${#nodes[@]} --pool=8 --batch=8 \
+  --private-key=id_rsa --ignore-score-weakness --skip-update

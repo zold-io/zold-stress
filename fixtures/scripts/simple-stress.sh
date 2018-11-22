@@ -26,5 +26,5 @@ zold pay --private-key=id_rsa 0000000000000000 abcdabcdabcdabcd 4.95 'To test'
 zold push 0000000000000000
 zold remove 0000000000000000
 
-# zold-stress --rounds=8 --wait=5 --threads=32 --pool=32 --batch=64 --private-key=id_rsa --verbose
-zold-stress --rounds=4 --wait=5 --threads=4 --pool=4 --batch=4 --private-key=id_rsa
+zold-stress --rounds=4 --wait=5 --threads=4 --pool=4 --batch=4 \
+  --private-key=id_rsa --ignore-score-weakness --skip-update
