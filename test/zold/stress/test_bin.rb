@@ -57,6 +57,7 @@ class TestBin < Minitest::Test
           end
         end
       end
+      sleep 1
       test_log.info("\n\n#{f} done in #{Zold::Age.new(start)}")
     end
   end
