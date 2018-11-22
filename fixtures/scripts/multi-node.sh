@@ -6,11 +6,11 @@ function start_node {
   cd ${port}
   zold node --trace --invoice=MULTINODE@ffffffffffffffff \
     --host=localhost --port=${port} --bind-port=${port} --dump-errors \
-    --no-metronome --halt-code=test --threads=1 --strength=2 > log.txt 2>&1 &
+    --no-metronome --halt-code=test --threads=1 --strength=2 --pretty=full > log.txt 2>&1 &
   pid=$!
   echo ${pid} > pid
   cd ..
-  wait_for_url http://localhost:${port}/
+  wait_for_url "http://localhost:${port}/"
   echo ${port}
 }
 
