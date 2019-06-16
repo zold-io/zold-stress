@@ -62,8 +62,8 @@ module Zold::Stress
       Tempfile.open do |f|
         File.write(f, @wallets.acq(balances[0][:id], &:key).to_s)
         while @wallets.all.count < @opts['pool']
-          Zold::Create.new(wallets: @wallets, log: @vlog).run(
-            ['create', "--public-key=#{f.path}", "--network=#{@opts['network']}"] + @opts.arguments
+          Zold::Create.new(wallets: @wallets, log: @vlog, remotes: nil).run(
+            ['create', "--public-key=#{f.path}", "--network=#{@opts['network']}", '--skip-test'] + @opts.arguments
           )
         end
       end

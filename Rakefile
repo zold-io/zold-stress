@@ -36,7 +36,6 @@ end
 task default: %i[clean test features rubocop copyright]
 
 require 'rake/testtask'
-desc 'Run all unit tests'
 Rake::TestTask.new(:test) do |test|
   ENV['TEST_QUIET_LOG'] = 'true' if ARGV.include?('--quiet')
   Rake::Cleaner.cleanup_files(['coverage'])
@@ -47,7 +46,6 @@ Rake::TestTask.new(:test) do |test|
 end
 
 require 'rdoc/task'
-desc 'Build RDoc documentation'
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "#{name} #{version}"
@@ -56,7 +54,6 @@ Rake::RDocTask.new do |rdoc|
 end
 
 require 'rubocop/rake_task'
-desc 'Run RuboCop on all directories'
 RuboCop::RakeTask.new(:rubocop) do |task|
   task.fail_on_error = true
   task.requires << 'rubocop-rspec'
@@ -72,7 +69,7 @@ Cucumber::Rake::Task.new(:'features:html') do |t|
 end
 
 task :copyright do
-  sh "grep -q -r '#{Date.today.strftime('%Y')}' \
+  sh "grep -q -r '-#{Date.today.strftime('%Y')}' \
     --include '*.rb' \
     --include '*.txt' \
     --include 'Rakefile' \

@@ -93,6 +93,8 @@ Available options:"
     exit
   end
 
+  Zold::Hands.start
+
   home = File.expand_path(opts[:home])
   FileUtils.mkdir_p(home)
   Dir.chdir(home)

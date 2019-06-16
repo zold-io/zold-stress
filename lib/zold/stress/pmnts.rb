@@ -85,7 +85,7 @@ module Zold::Stress
       end
       details = SecureRandom.uuid
       @stats.exec('paid', swallow: false) do
-        Zold::Pay.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
+        Zold::Pay.new(wallets: @wallets, remotes: @remotes, log: @vlog, copies: nil).run(
           [
             'pay', source.to_s, target.to_s, amount.to_zld(6), details,
             "--network=#{@opts['network']}", "--private-key=#{pvt}"

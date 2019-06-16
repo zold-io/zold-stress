@@ -52,8 +52,8 @@ class StressTest < Minitest::Test
         remotes.clean
         remotes.add('localhost', port)
         wallets = Zold::SyncWallets.new(Zold::CachedWallets.new(Zold::Wallets.new(home)))
-        Zold::Create.new(wallets: wallets, log: test_log).run(
-          ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test']
+        Zold::Create.new(wallets: wallets, log: test_log, remotes: nil).run(
+          ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test', '--skip-test']
         )
         wallets.acq(Zold::Id::ROOT) do |w|
           w.add(Zold::Txn.new(1, Time.now, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))

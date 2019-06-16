@@ -23,7 +23,7 @@ zold remote add localhost ${port}
 zold --public-key=id_rsa.pub create 0000000000000000
 zold --public-key=id_rsa.pub create abcdabcdabcdabcd
 zold pay --private-key=id_rsa 0000000000000000 abcdabcdabcdabcd 4.95 'To test'
-zold push 0000000000000000
+zold push 0000000000000000 --tolerate-edges
 zold remove 0000000000000000
 
 zold-stress --rounds=4 --wait=5 --threads=4 --pool=4 --batch=4 \

@@ -14,6 +14,8 @@
 [![Test Coverage](https://img.shields.io/codecov/c/github/zold-io/zold-stress.svg)](https://codecov.io/github/zold-io/zold-stress?branch=master)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ad51dc27597d1e728979/maintainability)](https://codeclimate.com/github/zold-io/zold-stress/maintainability)
 
+[![Hits-of-Code](https://hitsofcode.com/github/zold-io/zold-stress)](https://hitsofcode.com/view/github/zold-stress)
+
 Here is the [White Paper](https://papers.zold.io/wp.pdf).
 
 Join our [Telegram group](https://t.me/zold_io) to discuss it all live.
@@ -32,7 +34,7 @@ $ zold-stress --help
 
 You will have to install [Ruby](https://www.ruby-lang.org/en/) 2.5.1+ first.
 
-# How to contribute
+## How to contribute
 
 Read [these guidelines](https://www.yegor256.com/2014/04/15/github-guidelines.html).
 Make sure you build is green before you contribute
@@ -41,7 +43,7 @@ your pull request. You will need to have [Ruby](https://www.ruby-lang.org/en/) 2
 
 ```
 $ bundle update
-$ rake
+$ bundle exec rake
 ```
 
 If it's clean and you don't see any error messages, submit your pull request.
