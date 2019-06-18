@@ -80,6 +80,7 @@ module Zold::Stress
     rescue StandardError => ex
       put(metric + '_error', Time.now - start)
       @log.error(Backtrace.new(ex))
+      puts '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
       raise ex unless swallow
     ensure
       put(metric, Time.now - start)

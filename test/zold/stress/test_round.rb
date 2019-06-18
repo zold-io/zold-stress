@@ -58,25 +58,31 @@ class StressTest < Minitest::Test
         wallets.acq(Zold::Id::ROOT) do |w|
           w.add(Zold::Txn.new(1, Time.now, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))
         end
-        stats = Zold::Stress::Stats.new
+        stats = Zold::Stress::Stats.new(log: test_log)
         air = Zold::Stress::Air.new
-        batch = 20
+        batch = 4
         summary = Zold::Stress::Summary.new(stats, batch)
         round = Zold::Stress::Round.new(
           pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
-          wallets: wallets, remotes: remotes,
-          air: air, stats: stats,
+          wallets: wallets,
+          remotes: remotes,
+          air: air,
+          stats: stats,
           opts: test_opts('--pool=5', "--batch=#{batch}"),
           copies: File.join(home, 'copies'),
-          log: test_log, vlog: test_log
+          log: test_log,
+          vlog: test_log
         )
         round.update
         round.prepare
         round.send
         attempt = 0
         loop do
-          break if air.fetch.empty?
-          break if attempt > 50
+          if air.fetch.empty?
+            test_log.info('There is nothing in the air, time to stop')
+            break
+          end
+          break if attempt > 4
           round.pull
           round.match
           test_log.info(summary)

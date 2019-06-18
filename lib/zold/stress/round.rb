@@ -82,7 +82,10 @@ module Zold::Stress
         Thread.current.name = 'prepare-push'
         @stats.exec('push') do
           Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
-            ['push', id.to_s, "--network=#{@opts['network']}", '--tolerate-edges'] + @opts.arguments
+            [
+              'push', id.to_s, "--network=#{@opts['network']}",
+              '--tolerate-edges', '--tolerate-quorum=1'
+            ] + @opts.arguments
           )
         end
       end
@@ -104,7 +107,10 @@ in #{Zold::Age.new(start)}")
         Thread.current.name = 'send-push'
         @stats.exec('push') do
           Zold::Push.new(wallets: @wallets, remotes: @remotes, log: @vlog).run(
-            ['push', a[0].to_s, "--network=#{@opts['network']}", '--tolerate-edges'] + @opts.arguments
+            [
+              'push', a[0].to_s, "--network=#{@opts['network']}",
+              '--tolerate-edges', '--tolerate-quorum=1'
+            ] + @opts.arguments
           )
           mutex.synchronize do
             a[1].each { |p| @air.add(p) }
@@ -128,7 +134,7 @@ in #{Zold::Age.new(start)}, #{@air.fetch.count} are now in the air, \
           Zold::Pull.new(wallets: @wallets, remotes: @remotes, copies: @copies, log: @vlog).run(
             [
               'pull', id.to_s, "--network=#{@opts['network']}",
-              '--skip-propagate', '--tolerate-edges'
+              '--skip-propagate', '--tolerate-edges', '--tolerate-quorum=1'
             ] + @opts.arguments
           )
         end
