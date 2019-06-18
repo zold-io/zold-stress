@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+require 'date'
 require 'rubygems'
 require 'rake'
 require 'rdoc'
@@ -69,7 +70,7 @@ Cucumber::Rake::Task.new(:'features:html') do |t|
 end
 
 task :copyright do
-  sh "grep -q -r '-#{Date.today.strftime('%Y')}' \
+  sh "grep -q -r '2018-#{Date.today.strftime('%Y')}' \
     --include '*.rb' \
     --include '*.txt' \
     --include 'Rakefile' \
