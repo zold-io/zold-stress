@@ -44,7 +44,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'parallelize', '0.4.1'
   s.add_runtime_dependency 'slop', '4.6.2'
   s.add_runtime_dependency 'zold', '0.29.30'
-  s.add_development_dependency 'codecov', '0.1.13'
+  s.add_development_dependency 'codecov', '0.2.12'
   s.add_development_dependency 'cucumber', '1.3.11'
   s.add_development_dependency 'minitest', '5.11.3'
   s.add_development_dependency 'random-port', '0.3.0'
