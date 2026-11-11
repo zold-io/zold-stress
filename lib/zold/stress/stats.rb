@@ -64,7 +64,7 @@ module Zold::Stress
           {
             'total': data.count,
             'sum': sum,
-            'avg': (data.empty? ? 0 : (sum / data.count)),
+            'avg': (data.empty? ? 0 : (sum.to_f / data.count)),
             'max': data.max || 0,
             'min': data.min || 0,
             'age': (h.map { |a| a[:time] }.max || 0) - (h.map { |a| a[:time] }.min || 0)
