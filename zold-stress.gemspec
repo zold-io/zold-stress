@@ -39,7 +39,7 @@ Gem::Specification.new do |s|
   s.test_files = s.files.grep(%r{^(test|features)/})
   s.rdoc_options = ['--charset=UTF-8']
   s.extra_rdoc_files = ['README.md', 'LICENSE.txt']
-  s.add_runtime_dependency 'backtrace', '0.3.0'
+  s.add_runtime_dependency 'backtrace', '0.4.1'
   s.add_runtime_dependency 'concurrent-ruby', '~>1.1'
   s.add_runtime_dependency 'parallelize', '0.4.1'
   s.add_runtime_dependency 'slop', '4.6.2'
