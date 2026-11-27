@@ -47,7 +47,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'codecov', '0.1.13'
   s.add_development_dependency 'cucumber', '1.3.11'
   s.add_development_dependency 'minitest', '5.11.3'
-  s.add_development_dependency 'random-port', '0.3.0'
+  s.add_development_dependency 'random-port', '0.8.3'
   s.add_development_dependency 'rdoc', '6.1.2.1'
   s.add_development_dependency 'rspec-rails', '3.8.1'
   s.add_development_dependency 'rubocop', '0.62.0'
