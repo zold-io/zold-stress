@@ -80,8 +80,7 @@ module Zold::Stress
         ]
       )
       if @wallets.acq(source) { |w| Zold::Tax.new(w).in_debt? }
-        @log.error("The wallet #{source} is in debt and we can't pay taxes")
-        return
+        raise "The wallet #{source} is in debt and we can't pay taxes"
       end
       details = SecureRandom.uuid
       @stats.exec('paid', swallow: false) do

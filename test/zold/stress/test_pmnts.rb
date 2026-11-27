@@ -92,4 +92,33 @@ class PmntsTest < Minitest::Test
       assert_equal(46, wallets.all.map { |id| wallets.acq(id) { |w| w.txns.count } }.inject(&:+))
     end
   end
+
+  def test_fails_when_wallet_stays_in_debt
+    Dir.mktmpdir do |home|
+      wallets = Zold::SyncWallets.new(Zold::Wallets.new(home))
+      remotes = Zold::Remotes.new(file: File.join(home, 'remotes'), network: 'test')
+      Zold::Create.new(wallets: wallets, log: test_log, remotes: nil).run(
+        ['create', '--public-key=fixtures/id_rsa.pub', Zold::Id::ROOT.to_s, '--network=test', '--skip-test']
+      )
+      id = Zold::Create.new(wallets: wallets, log: test_log, remotes: nil).run(
+        ['create', '--public-key=fixtures/id_rsa.pub', '--network=test', '--skip-test']
+      )
+      wallets.acq(id) do |w|
+        (1..50).each do |i|
+          date = Time.now - (6 * 365 * 24 * 60 * 60)
+          w.add(Zold::Txn.new(i, date, Zold::Amount.new(zld: 1.0), 'NOPREFIX', Zold::Id.new, '-'))
+        end
+      end
+      assert_raises(RuntimeError) do
+        Zold::Stress::Pmnts.new(
+          pvt: Zold::Key.new(file: 'fixtures/id_rsa'),
+          wallets: wallets,
+          remotes: remotes,
+          stats: Zold::Stress::Stats.new,
+          opts: test_opts('--batch=1'),
+          log: test_log, vlog: test_log
+        ).send
+      end
+    end
+  end
 end
