@@ -35,6 +35,13 @@ class StatsTest < Minitest::Test
     assert_equal(1.55, stats.to_json[m][:avg])
   end
 
+  def test_averages_integers_without_truncation
+    stats = Zold::Stress::Stats.new
+    m = 'metric-3'
+    [1, 2, 2].each { |v| stats.put(m, v) }
+    assert_in_delta(1.666, stats.to_json[m][:avg], 0.01)
+  end
+
   def test_works_with_empty
     stats = Zold::Stress::Stats.new
     m = 'metric-2'
